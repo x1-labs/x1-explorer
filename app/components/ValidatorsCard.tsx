@@ -53,10 +53,10 @@ export function ValidatorsCard() {
 const renderValidatorRow = (validatorEntity: ValidatorEntity, index: number) => {
     return (
         <tr key={index}>
-            <td>
+            <td className={`${ validatorEntity.delinquent ? 'bg-validator-row' : null }`}>
               <div className="d-flex">
-                <Address pubkey={new PublicKey(validatorEntity.votePubkey)} link />
-                { validatorEntity.delinquent ? <AlertTriangle size="15" className="mx-2 text-danger" /> : null }
+                <Address pubkey={new PublicKey(validatorEntity.votePubkey)} link truncate />
+                { validatorEntity.delinquent ? <AlertTriangle size="15" className="mx-2 d-none d-sm-inline text-danger" /> : null }
               </div>
 
             </td>
