@@ -5,7 +5,6 @@ import React, {useEffect} from 'react';
 import { AlertTriangle } from 'react-feather';
 import { Tooltip } from 'react-tooltip'
 
-
 import {fetchXolanaValidators, ValidatorEntity} from "@/app/api";
 
 export function ValidatorsCard() {
