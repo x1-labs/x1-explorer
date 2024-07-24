@@ -3,6 +3,8 @@ import { SolBalance } from '@components/common/SolBalance';
 import { PublicKey} from '@solana/web3.js';
 import React, {useEffect} from 'react';
 import { AlertTriangle } from 'react-feather';
+import { Tooltip } from 'react-tooltip'
+
 
 import {fetchXolanaValidators, ValidatorEntity} from "@/app/api";
 
@@ -53,16 +55,25 @@ export function ValidatorsCard() {
 const renderValidatorRow = (validatorEntity: ValidatorEntity, index: number) => {
     return (
         <tr key={index}>
-            <td className={`${ validatorEntity.delinquent ? 'bg-validator-row' : null }`}>
+            <td>
               <div className="d-flex">
-                <Address pubkey={new PublicKey(validatorEntity.votePubkey)} link truncate />
-                { validatorEntity.delinquent ? <AlertTriangle size="15" className="mx-2 d-none d-sm-inline text-danger" /> : null }
+                <Address pubkey={new PublicKey(validatorEntity.votePubkey)} link truncate/>
+
+                {validatorEntity.delinquent ?
+                  <>
+                    <Tooltip id="my-tooltip" />
+                    <span data-tooltip-id="my-tooltip" data-tooltip-content="Delinquent Validator">
+                           <AlertTriangle size="15"  className="mx-2 text-danger" data-toggle="popover" data-placement="left"
+                                          data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus."/>
+                    </span>
+                  </>
+                   : null}
               </div>
 
             </td>
-            <td className="text-end">
-                <SolBalance lamports={validatorEntity.activatedStake} maximumFractionDigits={0} />
-            </td>
+          <td className="text-end">
+            <SolBalance lamports={validatorEntity.activatedStake} maximumFractionDigits={0}/>
+          </td>
         </tr>
     );
 };
