@@ -13,8 +13,8 @@ type Props = Readonly<{
 
 export async function generateMetadata(props: AddressPageMetadataProps): Promise<Metadata> {
     return {
-        description: `All tokens owned by the address ${props.params.address} on Xolana`,
-        title: `Tokens | ${await getReadableTitleFromAddress(props)} | Xolana`,
+        description: `All tokens owned by the address ${props.params.address} on X1 Network ™`,
+        title: `Tokens | ${await getReadableTitleFromAddress(props)} | X1 Network ™`,
     };
 }
 

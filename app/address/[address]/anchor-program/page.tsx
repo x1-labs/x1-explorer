@@ -12,8 +12,8 @@ type Props = Readonly<{
 
 export async function generateMetadata(props: AddressPageMetadataProps): Promise<Metadata> {
     return {
-        description: `The Interface Definition Language (IDL) file for the Anchor program at address ${props.params.address} on Xolana`,
-        title: `Anchor Program IDL | ${await getReadableTitleFromAddress(props)} | Xolana`,
+        description: `The Interface Definition Language (IDL) file for the Anchor program at address ${props.params.address} on X1 Network ™`,
+        title: `Anchor Program IDL | ${await getReadableTitleFromAddress(props)} | X1 Network ™`,
     };
 }
 

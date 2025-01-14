@@ -12,9 +12,9 @@ import { Rubik } from 'next/font/google';
 import { Metadata } from 'next/types';
 
 export const metadata: Metadata = {
-    description: 'Inspect transactions, accounts, blocks, and more on the Xolana blockchain',
+    description: 'Inspect transactions, accounts, blocks, and more on the X1 Network ™ blockchain',
     manifest: '/manifest.json',
-    title: 'Explorer | Xolana',
+    title: 'Explorer | X1 Network ™',
 };
 
 export const viewport: Viewport = {

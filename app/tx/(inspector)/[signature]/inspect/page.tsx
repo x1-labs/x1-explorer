@@ -9,8 +9,8 @@ type Props = Readonly<{
 
 export async function generateMetadata({ params: { signature } }: Props): Promise<Metadata> {
     return {
-        description: `Interactively inspect the transaction with signature ${signature} on Xolana`,
-        title: `Transaction Inspector | ${signature} | Xolana`,
+        description: `Interactively inspect the transaction with signature ${signature} on X1 Network ™`,
+        title: `Transaction Inspector | ${signature} | X1 Network ™`,
     };
 }
 

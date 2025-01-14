@@ -21,7 +21,7 @@ export function Navbar() {
             <div className="container">
                 <Link href={homePath}>
                     {/*<Image alt="Solana Explorer" height={22} src={Logo} width={250} />*/}
-                    XOLANA
+                    X1 Network ™
                 </Link>
 
                 <button className="navbar-toggler" type="button" onClick={() => setCollapse(value => !value)}>
