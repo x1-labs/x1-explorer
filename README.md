@@ -2,7 +2,7 @@
     <img alt="Solana" src="https://i.imgur.com/IKyzQ6T.png" width="250" />
 </p>
 
-# Solana Explorer
+# X1 Explorer
 
 ## Development
 
