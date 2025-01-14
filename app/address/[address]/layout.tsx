@@ -710,7 +710,9 @@ function getCustomLinkedTabs(pubkey: PublicKey, account: Account) {
                 <ProgramMultisigLink
                     tab={programMultisigTab}
                     address={pubkey.toString()}
-                    authority={(account.data.parsed as UpgradeableLoaderAccountData | undefined)?.programData?.authority}
+                    authority={
+                        (account.data.parsed as UpgradeableLoaderAccountData | undefined)?.programData?.authority
+                    }
                 />
             </React.Suspense>
         ),
