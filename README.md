@@ -1,7 +1,3 @@
-<p align="center">
-    <img alt="Solana" src="https://i.imgur.com/IKyzQ6T.png" width="250" />
-</p>
-
 # X1 Explorer
 
 ## Development
@@ -11,10 +7,7 @@ Once you have this version of `pnpm`, you can continue with the following steps.
 
 
 -   Copy `.env.example` into `.env` & fill out the fields with custom RPC urls \
-    from a Solana RPC provider. You should not use `https://api.mainnet-beta.solana.com` \
-    or `https://api.devnet.solana.com` or else you will get rate-limited. These are public \
-    endpoints not suitable for application development. You must set these URLs with \
-    endpoints from your own provider.
+    from a Solana RPC provider.
 
 -   `pnpm i` \
     Installs all project dependencies using pnpm package manager. This will create a \
