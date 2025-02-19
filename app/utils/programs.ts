@@ -255,7 +255,7 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.SWITCHBOARD,
     },
-    E279H61m8vi4kc6P66HDBcSe4FapsEeZsf9rE1qxRPQc: {
+    E279H61mv8i4kc6P66HD8cSe4fApsEeZsf9rE1qxRPQc: {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.XENDEX_STAKING,
     },
