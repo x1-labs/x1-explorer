@@ -36,4 +36,9 @@ next-env.d.ts
 
 # Speedy Web Compiler
 .swc/
-/.env
+
+# vim
+*.sw*
+.editorconfig
+
+.env
