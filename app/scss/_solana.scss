@@ -497,3 +497,36 @@ pre {
 .feature-icon {
     font-size: 1.5rem;
 }
+
+.bg-validator-delinquent {
+   background-color: rgba(230, 0, 158, 0.05); // Assuming $danger is red
+}
+
+.bg-validator-skipping {
+    background-color: rgba(230, 148, 0, 0.05); // Assuming $danger is red
+}
+
+.validator-website {
+    max-width: 400px;
+
+    @include media-breakpoint-down(lg) {
+        max-width: 200px;
+        display: inline-block;
+        vertical-align: bottom;
+    }
+
+    @media (max-width: 800px){
+        max-width: 100px;
+        display: inline-block;
+        vertical-align: bottom;
+    }
+
+    @media (max-width: 768px){
+        max-width: 180px;
+    }
+
+    @media (max-width: 400px){
+        max-width: 120px;
+    }
+}
+

@@ -5,7 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e27ef1ea-7a54-4b78-a668-a00eda7f4e1c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/utils/cluster.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/cluster.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/components/ValidatorInfo.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/components/LiveTransactionStatsCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/components/LiveTransactionStatsCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/components/ValidatorsCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/components/ValidatorsCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/scss/_solana-dark-overrides.scss" beforeDir="false" afterPath="$PROJECT_DIR$/app/scss/_solana-dark-overrides.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/scss/_solana-variables-dark.scss" beforeDir="false" afterPath="$PROJECT_DIR$/app/scss/_solana-variables-dark.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/scss/_solana-variables.scss" beforeDir="false" afterPath="$PROJECT_DIR$/app/scss/_solana-variables.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/scss/_solana.scss" beforeDir="false" afterPath="$PROJECT_DIR$/app/scss/_solana.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/validators/page-client.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/validators/page-client.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +31,9 @@
   </component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="e3r35mex" />
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
   <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP 8.1" />
   <component name="ProjectColorInfo">{
@@ -64,8 +78,11 @@
       <recent name="$PROJECT_DIR$/app/validators" />
       <recent name="$PROJECT_DIR$/app" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/components" />
+    </key>
   </component>
-  <component name="RunManager" selected="JavaScript Debug.localhost:9230">
+  <component name="RunManager" selected="npm.dev">
     <configuration name="localhost:9230" type="JavascriptDebugType" uri="http://localhost:9230">
       <method v="2" />
     </configuration>
@@ -95,7 +112,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.22562.218" />
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.25659.39" />
       </set>
     </attachedChunks>
   </component>
@@ -111,6 +128,11 @@
       <workItem from="1721702892218" duration="19411000" />
       <workItem from="1723824414845" duration="1856000" />
       <workItem from="1736891581228" duration="1362000" />
+      <workItem from="1741054169268" duration="5267000" />
+      <workItem from="1741119216434" duration="6877000" />
+      <workItem from="1741129853285" duration="18331000" />
+      <workItem from="1741153775965" duration="1286000" />
+      <workItem from="1741201190076" duration="7715000" />
     </task>
     <servers />
   </component>

@@ -1,25 +1,74 @@
-import { Address } from '@components/common/Address';
 import { SolBalance } from '@components/common/SolBalance';
-import { PublicKey} from '@solana/web3.js';
-import React, {useEffect} from 'react';
-import { AlertTriangle } from 'react-feather';
-import { Tooltip } from 'react-tooltip'
+import ValidatorInfo from "@components/ValidatorInfo";
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import {fetchXolanaValidators, ValidatorEntity} from "@/app/api";
+import { fetchXolanaValidators, ValidatorEntity } from "@/app/api";
+
 
 export function ValidatorsCard() {
-    const [validators, setValidators] = React.useState<ValidatorEntity[] | null>(null);
+  const [validators, setValidators] = useState<ValidatorEntity[] | null>(null);
+  const [sort, setSort] = useState<string>('activatedStake');
+  const router = useRouter();
 
-    useEffect(() => {
-        const fetchValidators = async () => {
-            const response = await fetchXolanaValidators();
+  useEffect(() => {
+    const fetchValidators = async () => {
+            const response = await fetchXolanaValidators(500, 0, sort);
             setValidators(response);
         };
 
         fetchValidators().then();
-    }, []);
+    }, [sort]);
 
-    return (
+  const handleRowClick = (votePubkey: string) => {
+    router.push(`/address/${votePubkey}`);
+  };
+
+  const renderValidatorRow = (validator: ValidatorEntity, index: number) => (
+    <tr
+      role="button"
+      key={index}
+      onClick={() => handleRowClick(validator.votePubkey)}
+    >
+      <td>
+        <ValidatorInfo validator={validator} />
+      </td>
+      <td className="text-center border-start d-none d-md-table-cell">
+        <SolBalance lamports={validator.activatedStake} maximumFractionDigits={0} />
+      </td>
+      <td className="border-start d-md-none">
+        <div className="text-muted">Active Stake:</div>
+        <SolBalance lamports={validator.activatedStake} maximumFractionDigits={0} />
+        <div className="text-muted">Votes (Last Epoch):</div>
+        {validator.votesLastEpoch?.toLocaleString()}
+        <hr />
+        <div>Block Production</div>
+        <div className="text-white-50">(Last 50 Epochs)</div>
+        <div className="text-muted">Assigned:</div>
+        {validator.leaderSlotsLast50Epochs?.toLocaleString()}
+        <div className="text-muted">Skipped:</div>
+        {validator.skippedSlotsLast50Epochs?.toLocaleString()}
+      </td>
+      <td className="text-center border-start d-none d-md-table-cell">
+        {validator.votesLastEpoch?.toLocaleString()}
+      </td>
+      <td className="text-end border-start d-none d-md-table-cell">
+        {validator.leaderSlotsLast50Epochs?.toLocaleString()}
+      </td>
+      <td className="text-end d-none d-md-table-cell">
+        <span className="m-2">
+          {validator.skippedSlotsLast50Epochs?.toLocaleString()}
+        </span>
+      </td>
+      <td className="text-end d-none d-md-table-cell">
+        <span className="m-2 text-muted">
+          {(validator.skipRateLast50Epochs * 100).toFixed(1)}%
+        </span>
+      </td>
+    </tr>
+  );
+
+  return (
         <>
             <div className="card">
                 <div className="card-header">
@@ -27,20 +76,41 @@ export function ValidatorsCard() {
                         <div className="col">
                             <h4 className="card-header-title">Validators</h4>
                         </div>
-
                     </div>
                 </div>
 
                 {validators && (
                     <div className="table-responsive mb-0">
-                        <table className="table table-sm table-nowrap card-table">
+                        <table className="table table-sm card-table">
                             <thead>
+                                <tr className="pb-1">
+                                  <th className="text-muted"></th>
+                                  <th className="text-muted border-start" style={{ minWidth: 150 }}></th>
+                                  <th className="text-muted pb-1 text-end border-start text-center d-none d-md-table-cell" style={{ minWidth: 120 }}>Last Epoch</th>
+                                  <th colSpan={3} className="text-muted text-center pb-1 border-start d-none d-md-table-cell" style={{ minWidth: 270 }}>
+                                    Block Production (Last 50 Epochs)
+                                  </th>
+                                </tr>
                                 <tr>
-                                    <th className="text-muted">Voter Address</th>
-                                    <th className="text-muted text-end">Active Stake (SOL)</th>
+                                  <th className="text-muted pt-1 pb-2">Validator</th>
+                                  <th className="text-muted text-end pt-1 pb-2 border-start">
+                                      <a href="#" onClick={() => setSort('activatedStake')}>Active Stake (XNT)</a>
+                                  </th>
+                                  <th className="text-muted text-end pt-1 pb-2 border-start text-center d-none d-md-table-cell">
+                                    <a href="#" onClick={() => setSort('votesLastEpoch')}>Votes</a>
+                                  </th>
+                                  <th colSpan={1} className="text-muted text-end pt-1 pb-2 border-start  d-none d-md-table-cell">
+                                      <a href="#" onClick={() => setSort('blocksProducedLast50Epochs')}>Assigned</a>
+                                  </th>
+                                  <th colSpan={1} className="text-muted text-end pt-1 pb-2  d-none d-md-table-cell">
+                                    <a href="#" onClick={() => setSort('skippedSlotsLast50Epochs')}>Skipped</a>
+                                  </th>
+                                  <th colSpan={1} className="text-muted text-end pt-1 pb-2  d-none d-md-table-cell">
+                                    <a href="#" onClick={() => setSort('skipRateLast50Epochs')}>Skip Rate</a>
+                                  </th>
                                 </tr>
                             </thead>
-                            <tbody className="list">
+                            <tbody>
                                 {validators.map((validator, index) => renderValidatorRow(validator, index))}
                             </tbody>
                         </table>
@@ -50,29 +120,3 @@ export function ValidatorsCard() {
         </>
     );
 }
-
-const renderValidatorRow = (validatorEntity: ValidatorEntity, index: number) => {
-    return (
-        <tr key={index}>
-            <td>
-              <div className="d-flex">
-                <Address pubkey={new PublicKey(validatorEntity.votePubkey)} link truncate/>
-
-                {validatorEntity.delinquent ?
-                  <>
-                    <Tooltip id="my-tooltip" />
-                    <span data-tooltip-id="my-tooltip" data-tooltip-content="Delinquent Validator">
-                           <AlertTriangle size="15"  className="mx-2 text-danger" data-toggle="popover" data-placement="left"
-                                          data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus."/>
-                    </span>
-                  </>
-                   : null}
-              </div>
-
-            </td>
-          <td className="text-end">
-            <SolBalance lamports={validatorEntity.activatedStake} maximumFractionDigits={0}/>
-          </td>
-        </tr>
-    );
-};
