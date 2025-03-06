@@ -35,6 +35,11 @@ export function ValidatorsCard() {
       </td>
       <td className="text-center border-start d-none d-md-table-cell">
         <SolBalance lamports={validator.activatedStake} maximumFractionDigits={0} />
+        <div className="text-muted">{
+          validator.activatedStakePercentage > .25 ?
+            validator.activatedStakePercentage?.toFixed(1) + '%' :
+            null}
+        </div>
       </td>
       <td className="border-start d-md-none">
         <div className="text-muted">Active Stake:</div>

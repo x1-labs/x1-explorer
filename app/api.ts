@@ -34,6 +34,7 @@ export interface ValidatorEntity {
   blocksProducedLast500Epochs: number
   skippedSlotsLast500Epochs: number
   skipRateLast500Epochs: number
+  activatedStakePercentage: number;
   createdAt: Date;
   updatedAt: Date;
 }
