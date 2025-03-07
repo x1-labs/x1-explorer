@@ -46,7 +46,7 @@ export function ValidatorsCard() {
         <SolBalance lamports={validator.activatedStake} maximumFractionDigits={0} />
         <div className="text-muted">Vote Credits</div>
         <div className="text-white-50">(Last Epoch)</div>
-        {validator.votesLastEpoch?.toLocaleString()}
+        {validator.voteCreditsLastEpoch?.toLocaleString()}
         <hr />
         <div>Block Production</div>
         <div className="text-white-50">(Last 50 Epochs)</div>
@@ -56,7 +56,7 @@ export function ValidatorsCard() {
         {validator.skippedSlotsLast50Epochs?.toLocaleString()}
       </td>
       <td className="text-center border-start d-none d-md-table-cell">
-        {validator.votesLastEpoch?.toLocaleString()}
+        {validator.voteCreditsLastEpoch?.toLocaleString()}
       </td>
       <td className="text-end border-start d-none d-md-table-cell">
         {validator.leaderSlotsLast50Epochs?.toLocaleString()}
@@ -80,7 +80,7 @@ export function ValidatorsCard() {
                 <div className="card-header">
                     <div className="row align-items-center">
                         <div className="col">
-                            <h4 className="card-header-title">Validators</h4>
+                          <h4 className="card-header-title">Validators</h4>
                         </div>
                     </div>
                 </div>
@@ -103,7 +103,7 @@ export function ValidatorsCard() {
                                       <a href="#" onClick={() => setSort('activatedStake')}>Active Stake (XNT)</a>
                                   </th>
                                   <th className="text-muted text-end pt-1 pb-2 border-start text-center d-none d-md-table-cell">
-                                    <a href="#" onClick={() => setSort('votesLastEpoch')}>Vote Credits</a>
+                                    <a href="#" onClick={() => setSort('voteCreditsLastEpoch')}>Vote Credits</a>
                                   </th>
                                   <th colSpan={1} className="text-muted text-end pt-1 pb-2 border-start  d-none d-md-table-cell">
                                       <a href="#" onClick={() => setSort('blocksProducedLast50Epochs')}>Assigned</a>

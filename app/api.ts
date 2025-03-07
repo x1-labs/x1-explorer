@@ -19,9 +19,9 @@ export interface ValidatorEntity {
   name: string;
   iconUrl: string;
   website: string;
-  votesLastEpoch: number;
-  votesLast50Epochs: number;
-  votesLast500Epochs: number;
+  voteCreditsLastEpoch: number;
+  voteCreditsLast50Epochs: number;
+  voteCreditsLast500Epochs: number;
   leaderSlotsLastEpoch: number
   blocksProducedLastEpoch: number
   skippedSlotsLastEpoch: number
