@@ -71,7 +71,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 813,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 750,
     "title": "Add TowerSync instruction",
     "description": "Enable new voting instruction",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0138-deprecate-legacy-vote-instructions.md"
@@ -82,7 +82,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 816,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 753,
     "title": "Programify Feature Gate",
     "description": "Turn feature gate syscall into a BPF program, enabling revocation of pending features.",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0089-programify-feature-gate-program.md"
@@ -93,7 +93,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 817,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 754,
     "title": "Migrate config program to Core BPF",
     "description": "Migrate the config program to a BPF program",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0140-migrate-config-to-core-bpf.md"
@@ -115,7 +115,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 824,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 756,
     "title": "Skip rent writes",
     "description": "Improve performance of validator performance at epoch boundary by skipping rent collection",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0183-skip-rent-rewrites.md"
@@ -126,7 +126,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 825,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 757,
     "title": "Disable rent fees collection",
     "description": "Disables rent collection for accounts, to be activated when all rent-paying accounts are gone",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0084-disable-rent-fees-collection.md"
@@ -146,8 +146,8 @@
     "key": "C97eKZygrkU4JxJsZdjgbUY7iQR7rKTr4NyDWo2E5pRm",
     "simd": "128",
     "version": "v2.1.6",
-    "testnetActivationEpoch": null,
-    "devnetActivationEpoch": null,
+    "testnetActivationEpoch": 756,
+    "devnetActivationEpoch": 849,
     "mainnetActivationEpoch": null,
     "title": "Address Lookup Table to Core BPF",
     "description": "Migrate the Address Lookup Table to a BPF program",
@@ -234,8 +234,8 @@
     "key": "B7H2caeia4ZFcpE3QcgMqbiWiBtWrdBRBSJ1DY6Ktxbq",
     "simd": "0182",
     "version": "v2.1.8",
-    "testnetActivationEpoch": null,
-    "devnetActivationEpoch": null,
+    "testnetActivationEpoch": 752,
+    "devnetActivationEpoch": 843,
     "mainnetActivationEpoch": null,
     "title": "Consume requested CUs for sBPF failures",
     "description": "Charge allocated compute units for sBPF failures instead of consumed compute units",
@@ -245,8 +245,8 @@
     "key": "9ypxGLzkMxi89eDerRKXWDXe44UY2z4hBig4mDhNq5Dp",
     "simd": "0159",
     "version": "v2.1.0",
-    "testnetActivationEpoch": null,
-    "devnetActivationEpoch": null,
+    "testnetActivationEpoch": 755,
+    "devnetActivationEpoch": 847,
     "mainnetActivationEpoch": null,
     "title": "Relax Precompile Failure Constraint",
     "description": "Charge transactions with precompile signature verification failures normal inclusion fees",
@@ -317,5 +317,60 @@
     "title": "Removes Accounts Delta Hash",
     "description": null,
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0223-removes-accounts-delta-hash.md"
+  },
+  {
+    "key": "JE86WkYvTrzW8HgNmrHY7dFYpCmSptUpKupbo2AdQ9cG",
+    "simd": "0166",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enables deployment and execution of SBPFv1 programs",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "F6UVKh1ujTEFK3en2SyAL3cdVnqko1FVEXWhmdLRu6WP",
+    "simd": "0173, 0174",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enables deployment and execution of SBPFv2 programs",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "C8XZNs1bfzaiT3YDeXZJ7G5swQWQv7tVzDnCxtHvnSpw",
+    "simd": "0178, 0179, 0189",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enables deployment and execution of SBPFv3 programs",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "8Cb77yHjPWe9wuWUfXeh6iszFGCDGNCoFk3tprViYHNm",
+    "simd": "0167",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enable loader-v4",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "EmhbpdVtZ2hWRGFWBDjn2i3SJD8Z36z4mpMcZJEnebnP",
+    "simd": "0167",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Disable new loader-v3 deployments",
+    "description": null,
+    "simd_link": null
   }
 ]
