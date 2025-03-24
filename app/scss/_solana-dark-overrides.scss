@@ -48,7 +48,7 @@ ul.log-messages {
 
     .search-bar__option {
         cursor: pointer;
-    
+
         &.search-bar__option--is-focused,
         &:hover {
             background-color: $gray-700-dark !important;

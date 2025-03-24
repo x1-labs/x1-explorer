@@ -1,9 +1,10 @@
 import { Address } from '@components/common/Address';
-import { HexData } from '@components/common/HexData';
 import { TransactionInstruction } from '@solana/web3.js';
 import React from 'react';
 
-export function RawDetails({ ix }: { ix: TransactionInstruction }) {
+import { HexData } from './HexData';
+
+export function BaseRawDetails({ ix }: { ix: TransactionInstruction }) {
     return (
         <>
             {ix.keys.map(({ pubkey, isSigner, isWritable }, keyIndex) => (

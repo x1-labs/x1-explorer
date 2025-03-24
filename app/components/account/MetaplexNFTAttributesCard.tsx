@@ -3,6 +3,7 @@ import { LoadingCard } from '@components/common/LoadingCard';
 import { Account, isTokenProgramData } from '@providers/accounts';
 import React from 'react';
 
+import { getProxiedUri } from '@/app/features/metadata/utils';
 import { useCluster } from '@/app/providers/cluster';
 import { useCompressedNft } from '@/app/providers/compressed-nft';
 
@@ -31,7 +32,7 @@ function NormalMetaplexNFTAttributesCard({ metadataUri }: { metadataUri: string 
 
     async function fetchMetadataAttributes() {
         try {
-            const response = await fetch(metadataUri);
+            const response = await fetch(getProxiedUri(metadataUri));
             const metadata = await response.json();
 
             // Verify if the attributes value is an array
