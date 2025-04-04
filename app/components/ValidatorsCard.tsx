@@ -103,7 +103,7 @@ export function ValidatorsCard() {
                                       <a href="#" onClick={() => setSort('activatedStake')}>Active Stake (XNT)</a>
                                   </th>
                                   <th className="text-muted text-end pt-1 pb-2 border-start text-center d-none d-md-table-cell">
-                                    <a href="#" onClick={() => setSort('voteCreditsLastEpoch')}>Vote Credits</a>
+                                    <a href="#" onClick={() => setSort('voteCreditsPreviousEpoch')}>Vote Credits</a>
                                   </th>
                                   <th colSpan={1} className="text-muted text-end pt-1 pb-2 border-start  d-none d-md-table-cell">
                                       <a href="#" onClick={() => setSort('blocksProducedLast50Epochs')}>Assigned</a>
