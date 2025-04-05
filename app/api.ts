@@ -19,13 +19,16 @@ export interface ValidatorEntity {
   name: string;
   iconUrl: string;
   website: string;
-  voteCreditsLastEpoch: number;
+  voteCountPreviousEpoch: number;
+  voteCountLast50Epochs: number;
+  voteCountLast500Epochs: number;
+  voteCreditsPreviousEpoch: number;
   voteCreditsLast50Epochs: number;
   voteCreditsLast500Epochs: number;
-  leaderSlotsLastEpoch: number
-  blocksProducedLastEpoch: number
-  skippedSlotsLastEpoch: number
-  skipRateLastEpoch: number
+  leaderSlotsPreviousEpoch: number
+  blocksProducedPreviousEpoch: number
+  skippedSlotsPreviousEpoch: number
+  skipRatePreviousEpoch: number
   leaderSlotsLast50Epochs: number
   blocksProducedLast50Epochs: number
   skipRateLast50Epochs: number

@@ -44,9 +44,9 @@ export function ValidatorsCard() {
       <td className="border-start d-md-none">
         <div className="text-muted">Active Stake:</div>
         <SolBalance lamports={validator.activatedStake} maximumFractionDigits={0} />
-        <div className="text-muted">Vote Credits</div>
+        <div className="text-muted">Votes</div>
         <div className="text-white-50">(Last Epoch)</div>
-        {validator.voteCreditsLastEpoch?.toLocaleString()}
+        {validator.voteCountPreviousEpoch?.toLocaleString()}
         <hr />
         <div>Block Production</div>
         <div className="text-white-50">(Last 50 Epochs)</div>
@@ -56,7 +56,7 @@ export function ValidatorsCard() {
         {validator.skippedSlotsLast50Epochs?.toLocaleString()}
       </td>
       <td className="text-center border-start d-none d-md-table-cell">
-        {validator.voteCreditsLastEpoch?.toLocaleString()}
+        {validator.voteCountPreviousEpoch?.toLocaleString()}
       </td>
       <td className="text-end border-start d-none d-md-table-cell">
         {validator.leaderSlotsLast50Epochs?.toLocaleString()}
@@ -103,7 +103,7 @@ export function ValidatorsCard() {
                                       <a href="#" onClick={() => setSort('activatedStake')}>Active Stake (XNT)</a>
                                   </th>
                                   <th className="text-muted text-end pt-1 pb-2 border-start text-center d-none d-md-table-cell">
-                                    <a href="#" onClick={() => setSort('voteCreditsPreviousEpoch')}>Vote Credits</a>
+                                    <a href="#" onClick={() => setSort('voteCountPreviousEpoch')}>Votes</a>
                                   </th>
                                   <th colSpan={1} className="text-muted text-end pt-1 pb-2 border-start  d-none d-md-table-cell">
                                       <a href="#" onClick={() => setSort('blocksProducedLast50Epochs')}>Assigned</a>
