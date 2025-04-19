@@ -71,7 +71,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 813,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 750,
     "title": "Add TowerSync instruction",
     "description": "Enable new voting instruction",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0138-deprecate-legacy-vote-instructions.md"
@@ -82,7 +82,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 816,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 753,
     "title": "Programify Feature Gate",
     "description": "Turn feature gate syscall into a BPF program, enabling revocation of pending features.",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0089-programify-feature-gate-program.md"
@@ -93,7 +93,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 817,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 754,
     "title": "Migrate config program to Core BPF",
     "description": "Migrate the config program to a BPF program",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0140-migrate-config-to-core-bpf.md"
@@ -115,7 +115,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 824,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 756,
     "title": "Skip rent writes",
     "description": "Improve performance of validator performance at epoch boundary by skipping rent collection",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0183-skip-rent-rewrites.md"
@@ -126,7 +126,7 @@
     "version": "v2.1.6",
     "testnetActivationEpoch": 746,
     "devnetActivationEpoch": 825,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 757,
     "title": "Disable rent fees collection",
     "description": "Disables rent collection for accounts, to be activated when all rent-paying accounts are gone",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0084-disable-rent-fees-collection.md"
@@ -225,7 +225,7 @@
     "version": "v2.1.10",
     "testnetActivationEpoch": 750,
     "devnetActivationEpoch": 842,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 759,
     "title": "Reserve minimal CUs for builtins",
     "description": "Allocate 3,000 compute units for builtins, instead of normal 200,000 compute units",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0170-builtin-instruction-cost-and-budget.md"
@@ -280,7 +280,7 @@
     "version": "v2.1.0",
     "testnetActivationEpoch": 748,
     "devnetActivationEpoch": 839,
-    "mainnetActivationEpoch": null,
+    "mainnetActivationEpoch": 758,
     "title": "Charge fees for transactions that fail to load",
     "description": null,
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0191-enable-transaction-loading-failure-fees.md"
@@ -317,5 +317,137 @@
     "title": "Removes Accounts Delta Hash",
     "description": null,
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0223-removes-accounts-delta-hash.md"
+  },
+  {
+    "key": "srremy31J5Y25FrAApwVb9kZcfXbusYMMsvTK9aWv5q",
+    "simd": "0075",
+    "version": "v2.2.6",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Enable secp256r1 precompile",
+    "description": null,
+    "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0075-precompile-for-secp256r1-sigverify.md"
+  },
+  {
+    "key": "RENtePQcDLrAbxAsP3k8dwVcnNYQ466hi2uKvALjnXx",
+    "simd": "0267",
+    "version": "v2.2.8",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Sets rent_epoch to a constant in the VM",
+    "description": null,
+    "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0267-rent-epoch-in-vm-is-a-constant.md"
+  },
+  {
+    "key": "LTHasHQX6661DaDD4S6A2TFi6QBuiwXKv66fB1obfHq",
+    "simd": "0215",
+    "version": "v2.2.6",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Accounts Lt Hash",
+    "description": null,
+    "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0215-accounts-lattice-hash.md"
+  },
+  {
+    "key": "2B2SBNbUcr438LtGXNcJNBP2GBSxjx81F945SdSkUSfC",
+    "simd": "0175",
+    "version": "v2.2.6",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "SIMD-0175: Disable partitioned rent collection",
+    "description": null,
+    "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0175-disable-partitioned-rent-collection.md"
+  },
+  {
+    "key": "JE86WkYvTrzW8HgNmrHY7dFYpCmSptUpKupbo2AdQ9cG",
+    "simd": "0166",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enables deployment and execution of SBPFv1 programs",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "F6UVKh1ujTEFK3en2SyAL3cdVnqko1FVEXWhmdLRu6WP",
+    "simd": "0173, 0174",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enables deployment and execution of SBPFv2 programs",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "C8XZNs1bfzaiT3YDeXZJ7G5swQWQv7tVzDnCxtHvnSpw",
+    "simd": "0178, 0179, 0189",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enables deployment and execution of SBPFv3 programs",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "FXs1zh47QbNnhXcnB6YiAQoJ4sGB91tKF3UFHLcKT7PM",
+    "simd": "0162",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Remove accounts executable flag checks",
+    "description": null,
+    "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0162-remove-accounts-executable-flag-checks.md"
+  },
+  {
+    "key": "8Cb77yHjPWe9wuWUfXeh6iszFGCDGNCoFk3tprViYHNm",
+    "simd": "0167",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Enable loader-v4",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "EmhbpdVtZ2hWRGFWBDjn2i3SJD8Z36z4mpMcZJEnebnP",
+    "simd": "0167",
+    "version": "v2.2.0",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Feature Gate: Disable new loader-v3 deployments",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "5KLGJSASDVxKPjLCDWNtnABLpZjsQSrYZ8HKwcEdAMC8",
+    "simd": "",
+    "version": "v2.2.8",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "drop unchained Merkle shreds",
+    "description": null,
+    "simd_link": null
+  },
+  {
+    "key": "6oMCUgfY6BzZ6jwB681J6ju5Bh6CjVXbd7NeWYqiXBSu",
+    "simd": "0256",
+    "version": "",
+    "testnetActivationEpoch": null,
+    "devnetActivationEpoch": null,
+    "mainnetActivationEpoch": null,
+    "title": "Raise Block Limits to 60M CU",
+    "description": null,
+    "simd_link": null
   }
 ]
