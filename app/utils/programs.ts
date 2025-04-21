@@ -97,8 +97,9 @@ export enum PROGRAM_NAMES {
     LIGHTHOUSE_PROGRAM = 'Lighthouse Program',
 
     //Xendex
-    XENDEX_AMM = 'XenDEX AMM Program',
-    XENDEX_STAKING = 'XenDEX Staking Program',
+    XDEX_AMM = 'XDEX AMM Program',
+    XDEX_STAKING = 'XDEX Staking Program',
+    XDEX_STAKING = 'XDEX LP Farm Program',
 }
 
 const ALL_CLUSTERS = [Cluster.Custom, Cluster.Devnet, Cluster.Testnet, Cluster.MainnetBeta];
@@ -159,7 +160,15 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
     },
     '7EEuq61z9VKdkUzj7G36xGd7ncyz8KBtUwAWVjypYQHf': {
         deployments: [Cluster.MainnetBeta],
-        name: PROGRAM_NAMES.XENDEX_AMM,
+        name: PROGRAM_NAMES.XDEX_AMM,
+    },
+    '3NjXk9mS9sF2zwbkNkkUwtoc4v9SXefxTJTn9uS1yNYA': {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.XDEX_STAKING,
+    },
+    'CRwXN8CVAT1gXeyZpANsLagDxVoZGfPX9vezgevG5kNw': {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.XDEX_FARMING,
     },
     '7sPptkymzvayoSbLXzBsXEF8TSf3typNnAWkrKrDizNb': {
         deployments: [Cluster.MainnetBeta],
@@ -255,10 +264,6 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
     DtmE9D2CSB4L5D6A15mraeEjrGMm6auWVzgaD8hK2tZM: {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.SWITCHBOARD,
-    },
-    E279H61mv8i4kc6P66HD8cSe4fApsEeZsf9rE1qxRPQc: {
-        deployments: [Cluster.MainnetBeta],
-        name: PROGRAM_NAMES.XENDEX_STAKING,
     },
     EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o: {
         deployments: [Cluster.MainnetBeta],
