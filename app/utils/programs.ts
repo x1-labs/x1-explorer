@@ -99,7 +99,7 @@ export enum PROGRAM_NAMES {
     //Xendex
     XDEX_AMM = 'XDEX AMM Program',
     XDEX_STAKING = 'XDEX Staking Program',
-    XDEX_STAKING = 'XDEX LP Farm Program',
+    XDEX_FARMING = 'XDEX LP Farm Program',
 }
 
 const ALL_CLUSTERS = [Cluster.Custom, Cluster.Devnet, Cluster.Testnet, Cluster.MainnetBeta];
