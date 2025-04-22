@@ -158,21 +158,21 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.RAYDIUM_AMM,
     },
-    '7EEuq61z9VKdkUzj7G36xGd7ncyz8KBtUwAWVjypYQHf': {
-        deployments: [Cluster.MainnetBeta],
-        name: PROGRAM_NAMES.XDEX_AMM,
-    },
     '3NjXk9mS9sF2zwbkNkkUwtoc4v9SXefxTJTn9uS1yNYA': {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.XDEX_STAKING,
     },
-    'CRwXN8CVAT1gXeyZpANsLagDxVoZGfPX9vezgevG5kNw': {
+    '7EEuq61z9VKdkUzj7G36xGd7ncyz8KBtUwAWVjypYQHf': {
         deployments: [Cluster.MainnetBeta],
-        name: PROGRAM_NAMES.XDEX_FARMING,
+        name: PROGRAM_NAMES.XDEX_AMM,
     },
     '7sPptkymzvayoSbLXzBsXEF8TSf3typNnAWkrKrDizNb': {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.MANGO_ICO,
+    },
+    'CRwXN8CVAT1gXeyZpANsLagDxVoZGfPX9vezgevG5kNw': {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.XDEX_FARMING,
     },
     '82yxjeMsvaURa4MbZZ7WZZHfobirZYkH1zF8fmeGtyaQ': {
         deployments: [Cluster.MainnetBeta],
