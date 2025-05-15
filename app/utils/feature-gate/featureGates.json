@@ -132,17 +132,6 @@
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0084-disable-rent-fees-collection.md"
   },
   {
-    "key": "sr11RdZWgbHTHxSroPALe6zgaT5A1K9LcE4nfsZS4gi",
-    "simd": "75",
-    "version": "v2.1.6",
-    "testnetActivationEpoch": null,
-    "devnetActivationEpoch": null,
-    "mainnetActivationEpoch": null,
-    "title": "Enable secp256r1 precompile",
-    "description": "Enable on-chain verification of Passkeys and the WebAuthn Standard (secp256r1) signatures",
-    "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0075-precompile-for-secp256r1-sigverify.md"
-  },
-  {
     "key": "C97eKZygrkU4JxJsZdjgbUY7iQR7rKTr4NyDWo2E5pRm",
     "simd": "128",
     "version": "v2.1.6",
@@ -337,7 +326,7 @@
     "devnetActivationEpoch": null,
     "mainnetActivationEpoch": null,
     "title": "Enable secp256r1 precompile",
-    "description": null,
+    "description": "Enable on-chain verification of Passkeys and the WebAuthn Standard (secp256r1) signatures",
     "simd_link": "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0075-precompile-for-secp256r1-sigverify.md"
   },
   {
