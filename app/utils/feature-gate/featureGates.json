@@ -596,7 +596,7 @@
     "min_jito_versions": [],
     "planned_testnet_order": null,
     "testnet_activation_epoch": 783,
-    "devnet_activation_epoch": null,
+    "devnet_activation_epoch": 881,
     "comms_required": null,
     "mainnet_activation_epoch": null,
     "description": "Enable on-chain verification of Passkeys and the WebAuthn Standard (secp256r1) signatures"
@@ -619,7 +619,7 @@
       "v2.2.8"
     ],
     "planned_testnet_order": null,
-    "testnet_activation_epoch": null,
+    "testnet_activation_epoch": 785,
     "devnet_activation_epoch": null,
     "comms_required": null,
     "mainnet_activation_epoch": null,
