@@ -25,7 +25,9 @@ import {
     MemoTransfer,
     MetadataPointer,
     MintCloseAuthority,
+    PausableConfig,
     PermanentDelegate,
+    ScaledUiAmountConfig,
     TokenExtension,
     TokenGroup,
     TokenGroupMember,
@@ -526,6 +528,8 @@ function cmpExtension(a: TokenExtension, b: TokenExtension) {
         'confidentialTransferFeeAmount',
         'confidentialTransferMint',
         'interestBearingConfig',
+        'pausableConfig',
+        'scaledUiAmountConfig',
         'transferFeeConfig',
         'tokenGroup',
         'tokenGroupMember',
@@ -766,6 +770,58 @@ export function TokenExtensionRow(
                         <td>Initialization Timestamp</td>
                         <td className="text-lg-end">{displayTimestamp(extension.initializationTimestamp * 1000)}</td>
                     </tr>
+                </>
+            );
+        }
+        case 'scaledUiAmountConfig': {
+            const extension = create(tokenExtension.state, ScaledUiAmountConfig);
+            return (
+                <>
+                    {headerStyle === 'header' ? <HHeader name="Scaled UI Amount" /> : null}
+                    {extension.authority && (
+                        <tr>
+                            <td>Authority</td>
+                            <td className="text-lg-end">
+                                <Address pubkey={extension.authority} alignRight link />
+                            </td>
+                        </tr>
+                    )}
+                    <tr>
+                        <td>Multiplier</td>
+                        <td className="text-lg-end">{extension.multiplier}</td>
+                    </tr>
+                    <tr>
+                        <td>New Multiplier</td>
+                        <td className="text-lg-end">{extension.newMultiplier}</td>
+                    </tr>
+                    <tr>
+                        <td>New Multiplier Effective Timestamp</td>
+                        <td className="text-lg-end">
+                            {displayTimestamp(extension.newMultiplierEffectiveTimestamp * 1000)}
+                        </td>
+                    </tr>
+                </>
+            );
+        }
+        case 'pausableConfig': {
+            const extension = create(tokenExtension.state, PausableConfig);
+            return (
+                <>
+                    {headerStyle === 'header' ? <HHeader name="Pausable" /> : null}
+                    <>
+                        {extension.authority && (
+                            <tr>
+                                <td>Authority</td>
+                                <td className="text-lg-end">
+                                    <Address pubkey={extension.authority} alignRight link />
+                                </td>
+                            </tr>
+                        )}
+                        <tr>
+                            <td>Paused</td>
+                            <td className="text-lg-end">{extension.paused ? 'paused' : 'not paused'}</td>
+                        </tr>
+                    </>
                 </>
             );
         }
