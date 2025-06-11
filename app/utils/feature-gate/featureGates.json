@@ -549,8 +549,8 @@
     "min_fd_versions": [],
     "min_jito_versions": [],
     "planned_testnet_order": null,
-    "testnet_activation_epoch": null,
-    "devnet_activation_epoch": null,
+    "testnet_activation_epoch": 794,
+    "devnet_activation_epoch": 895,
     "comms_required": null,
     "mainnet_activation_epoch": null,
     "description": "Remove hashing of modified account state in favor of the Accounts Lattice Hash"
@@ -574,7 +574,7 @@
     ],
     "planned_testnet_order": null,
     "testnet_activation_epoch": 789,
-    "devnet_activation_epoch": null,
+    "devnet_activation_epoch": 893,
     "comms_required": null,
     "mainnet_activation_epoch": null,
     "description": "Faster hashing of all account state at then end of every block instead of every epoch"
@@ -620,7 +620,7 @@
     ],
     "planned_testnet_order": null,
     "testnet_activation_epoch": 785,
-    "devnet_activation_epoch": null,
+    "devnet_activation_epoch": 892,
     "comms_required": null,
     "mainnet_activation_epoch": null,
     "description": null
@@ -663,7 +663,7 @@
     "min_fd_versions": [],
     "min_jito_versions": [],
     "planned_testnet_order": null,
-    "testnet_activation_epoch": null,
+    "testnet_activation_epoch": 795,
     "devnet_activation_epoch": null,
     "comms_required": null,
     "mainnet_activation_epoch": null,
