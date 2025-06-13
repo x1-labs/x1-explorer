@@ -1,5 +1,6 @@
 'use client';
 
+import ScaledUiAmountMultiplierTooltip from '@components/account/token-extensions/ScaledUiAmountMultiplierTooltip';
 import { Address } from '@components/common/Address';
 import { ErrorCard } from '@components/common/ErrorCard';
 import { LoadingCard } from '@components/common/LoadingCard';
@@ -7,6 +8,7 @@ import { Signature } from '@components/common/Signature';
 import { TokenInstructionType, Transfer, TransferChecked } from '@components/instruction/token/types';
 import { isTokenProgramData, useAccountHistory } from '@providers/accounts';
 import { useFetchAccountHistory } from '@providers/accounts/history';
+import { useScaledUiAmountForMint } from '@providers/accounts/tokens';
 import { FetchStatus } from '@providers/cache';
 import { useCluster } from '@providers/cluster';
 import { ParsedInstruction, ParsedTransactionWithMeta, PartiallyDecodedInstruction, PublicKey } from '@solana/web3.js';
@@ -29,8 +31,66 @@ type IndexedTransfer = {
     transfer: Transfer | TransferChecked;
 };
 
+type TransferData = {
+    amountString: string;
+    blockTime: number | undefined;
+    childIndex?: number;
+    index: number;
+    signature: string;
+    statusClass: string;
+    statusText: string;
+    transfer: Transfer | TransferChecked;
+    units: string;
+};
+
 async function fetchTokenInfo([_, address, cluster, url]: ['get-token-info', string, Cluster, string]) {
     return await getTokenInfo(new PublicKey(address), cluster, url);
+}
+
+function TransferRow({
+    data,
+    hasTimestamps,
+    tokenAddress,
+}: {
+    data: TransferData;
+    hasTimestamps: boolean;
+    tokenAddress: string | undefined;
+}) {
+    const { signature, blockTime, statusText, statusClass, transfer, index, childIndex, amountString, units } = data;
+    const [amountWithScaledUiAmountMultiplier, scaledUiAmountMultiplier] = useScaledUiAmountForMint(
+        tokenAddress,
+        amountString
+    );
+
+    return (
+        <tr key={signature + index + (childIndex || '')}>
+            <td>
+                <Signature signature={signature} link truncateChars={24} />
+            </td>
+
+            {hasTimestamps && <td className="text-muted">{blockTime && <Moment date={blockTime * 1000} fromNow />}</td>}
+
+            <td>
+                <Address pubkey={transfer.source} link truncateChars={16} />
+            </td>
+
+            <td>
+                <Address pubkey={transfer.destination} link truncateChars={16} />
+            </td>
+
+            <td>
+                {amountWithScaledUiAmountMultiplier} {units}
+                <ScaledUiAmountMultiplierTooltip
+                    rawAmount={amountString}
+                    scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                />
+            </td>
+
+            <td>
+                <span className={`badge bg-${statusClass}-soft`}>{statusText}</span>
+            </td>
+        </tr>
+    );
 }
 
 export function TokenTransfersCard({ address }: { address: string }) {
@@ -56,11 +116,11 @@ export function TokenTransfersCard({ address }: { address: string }) {
         }
     }, [address]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const { hasTimestamps, detailsList } = React.useMemo(() => {
+    const { allTransfers, hasTimestamps } = React.useMemo(() => {
         const detailedHistoryMap = history?.data?.transactionMap || new Map<string, ParsedTransactionWithMeta>();
         const hasTimestamps = transactionRows.some(element => element.blockTime);
-        const detailsList: React.ReactNode[] = [];
         const mintMap = new Map<string, MintDetails>();
+        const allTransfers: TransferData[] = [];
 
         transactionRows.forEach(({ signature, blockTime, statusText, statusClass }) => {
             const transactionWithMeta = detailedHistoryMap.get(signature);
@@ -141,38 +201,22 @@ export function TokenTransfersCard({ address }: { address: string }) {
                     }).format(normalizeTokenAmount(transfer.amount, decimals));
                 }
 
-                detailsList.push(
-                    <tr key={signature + index + (childIndex || '')}>
-                        <td>
-                            <Signature signature={signature} link truncateChars={24} />
-                        </td>
-
-                        {hasTimestamps && (
-                            <td className="text-muted">{blockTime && <Moment date={blockTime * 1000} fromNow />}</td>
-                        )}
-
-                        <td>
-                            <Address pubkey={transfer.source} link truncateChars={16} />
-                        </td>
-
-                        <td>
-                            <Address pubkey={transfer.destination} link truncateChars={16} />
-                        </td>
-
-                        <td>
-                            {amountString} {units}
-                        </td>
-
-                        <td>
-                            <span className={`badge bg-${statusClass}-soft`}>{statusText}</span>
-                        </td>
-                    </tr>
-                );
+                allTransfers.push({
+                    amountString,
+                    blockTime: blockTime || undefined,
+                    childIndex,
+                    index,
+                    signature,
+                    statusClass,
+                    statusText,
+                    transfer,
+                    units,
+                });
             });
         });
 
         return {
-            detailsList,
+            allTransfers,
             hasTimestamps,
         };
     }, [history, transactionRows, tokenInfo, pubkey, address, cluster, tokenInfoLoading]);
@@ -205,7 +249,16 @@ export function TokenTransfersCard({ address }: { address: string }) {
                             <th className="text-muted">Result</th>
                         </tr>
                     </thead>
-                    <tbody className="list">{detailsList}</tbody>
+                    <tbody className="list">
+                        {allTransfers.map(transferData => (
+                            <TransferRow
+                                key={transferData.signature + transferData.index + (transferData.childIndex || '')}
+                                data={transferData}
+                                hasTimestamps={hasTimestamps}
+                                tokenAddress={pubkey.toBase58()}
+                            />
+                        ))}
+                    </tbody>
                 </table>
             </div>
             <HistoryCardFooter fetching={fetching} foundOldest={history.data.foundOldest} loadMore={() => loadMore()} />

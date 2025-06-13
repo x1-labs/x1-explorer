@@ -1,10 +1,16 @@
 'use client';
 
+import ScaledUiAmountMultiplierTooltip from '@components/account/token-extensions/ScaledUiAmountMultiplierTooltip';
 import { Address } from '@components/common/Address';
 import { ErrorCard } from '@components/common/ErrorCard';
 import { Identicon } from '@components/common/Identicon';
 import { LoadingCard } from '@components/common/LoadingCard';
-import { TokenInfoWithPubkey, useAccountOwnedTokens, useFetchAccountOwnedTokens } from '@providers/accounts/tokens';
+import {
+    TokenInfoWithPubkey,
+    useAccountOwnedTokens,
+    useFetchAccountOwnedTokens,
+    useScaledUiAmountForMint,
+} from '@providers/accounts/tokens';
 import { FetchStatus } from '@providers/cache';
 import { PublicKey } from '@solana/web3.js';
 import { BigNumber } from 'bignumber.js';
@@ -12,6 +18,8 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import React, { useCallback, useMemo } from 'react';
 import { ChevronDown } from 'react-feather';
+
+import { normalizeTokenAmount } from '@/app/utils';
 
 type Display = 'summary' | 'detail' | null;
 
@@ -60,6 +68,7 @@ export function OwnedTokensCard({ address }: { address: string }) {
     if (tokens.length > 100) {
         return <ErrorCard text="Token holdings is not available for accounts with over 100 token accounts" />;
     }
+    const showLogos = tokens.some(t => t.logoURI !== undefined);
 
     return (
         <>
@@ -70,80 +79,85 @@ export function OwnedTokensCard({ address }: { address: string }) {
                     <h3 className="card-header-title">Token Holdings</h3>
                     <DisplayDropdown display={display} toggle={() => setDropdown(show => !show)} show={showDropdown} />
                 </div>
-                {display === 'detail' ? (
-                    <HoldingsDetailTable tokens={tokens} />
-                ) : (
-                    <HoldingsSummaryTable tokens={tokens} />
-                )}
+
+                <div className="table-responsive mb-0">
+                    <table className="table table-sm table-nowrap card-table">
+                        <thead>
+                            <tr>
+                                {showLogos && <th className="text-muted w-1 p-0 text-center">Logo</th>}
+                                {display === 'detail' && <th className="text-muted">Account Address</th>}
+                                <th className="text-muted">Mint Address</th>
+                                <th className="text-muted">{display === 'detail' ? 'Total Balance' : 'Balance'}</th>
+                            </tr>
+                        </thead>
+                        {display === 'detail' ? (
+                            <HoldingsDetail tokens={tokens} showLogos={showLogos} />
+                        ) : (
+                            <HoldingsSummary tokens={tokens} showLogos={showLogos} />
+                        )}
+                    </table>
+                </div>
             </div>
         </>
     );
 }
 
-function HoldingsDetailTable({ tokens }: { tokens: TokenInfoWithPubkey[] }) {
-    const detailsList: React.ReactNode[] = [];
-    const showLogos = tokens.some(t => t.logoURI !== undefined);
-    tokens.forEach(tokenAccount => {
-        const address = tokenAccount.pubkey.toBase58();
-        detailsList.push(
-            <tr key={address}>
-                {showLogos && (
-                    <td className="w-1 p-0 text-center">
-                        {tokenAccount.logoURI ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                alt="token icon"
-                                className="token-icon rounded-circle border border-4 border-gray-dark"
-                                height={16}
-                                src={tokenAccount.logoURI}
-                                width={16}
-                            />
-                        ) : (
-                            <Identicon
-                                address={address}
-                                className="avatar-img identicon-wrapper identicon-wrapper-small"
-                                style={{ width: SMALL_IDENTICON_WIDTH }}
-                            />
-                        )}
-                    </td>
-                )}
-                <td>
-                    <Address pubkey={tokenAccount.pubkey} link truncate />
-                </td>
-                <td>
-                    <Address pubkey={tokenAccount.info.mint} link truncate tokenLabelInfo={tokenAccount} />
-                </td>
-                <td>
-                    {tokenAccount.info.tokenAmount.uiAmountString} {tokenAccount.symbol}
-                </td>
-            </tr>
-        );
-    });
+type MappedToken = {
+    amount: string;
+    decimals: number;
+    logoURI?: string;
+    name?: string;
+    pubkey?: string;
+    rawAmount: string;
+    symbol?: string;
+};
+
+function HoldingsDetail({ tokens, showLogos }: { tokens: TokenInfoWithPubkey[]; showLogos: boolean }) {
+    const mappedTokens = useMemo(() => {
+        const tokensMap = new Map<string, MappedToken>();
+
+        tokens.forEach(({ info: token, logoURI, pubkey, symbol, name }) => {
+            const mintAddress = token.mint.toBase58();
+            const existingToken = tokensMap.get(mintAddress);
+
+            const rawAmount = token.tokenAmount.amount;
+            const decimals = token.tokenAmount.decimals;
+            let amount = token.tokenAmount.uiAmountString;
+
+            if (existingToken) {
+                amount = new BigNumber(existingToken.amount).plus(token.tokenAmount.uiAmountString).toString();
+            }
+
+            tokensMap.set(mintAddress, {
+                amount,
+                decimals,
+                logoURI,
+                name,
+                pubkey: pubkey.toBase58(),
+                rawAmount,
+                symbol,
+            });
+        });
+
+        return tokensMap;
+    }, [tokens]);
 
     return (
-        <div className="table-responsive mb-0">
-            <table className="table table-sm table-nowrap card-table">
-                <thead>
-                    <tr>
-                        {showLogos && <th className="text-muted w-1 p-0 text-center">Logo</th>}
-                        <th className="text-muted">Account Address</th>
-                        <th className="text-muted">Mint Address</th>
-                        <th className="text-muted">Balance</th>
-                    </tr>
-                </thead>
-                <tbody className="list">{detailsList}</tbody>
-            </table>
-        </div>
+        <tbody className="list">
+            {Array.from(mappedTokens.entries()).map(([mintAddress, token]) => (
+                <TokenRow
+                    key={mintAddress}
+                    mintAddress={mintAddress}
+                    token={token}
+                    showLogo={showLogos}
+                    showAccountAddress={true}
+                />
+            ))}
+        </tbody>
     );
 }
 
-function HoldingsSummaryTable({ tokens }: { tokens: TokenInfoWithPubkey[] }) {
-    type MappedToken = {
-        amount: string;
-        logoURI?: string;
-        symbol?: string;
-        name?: string;
-    };
+function HoldingsSummary({ tokens, showLogos }: { tokens: TokenInfoWithPubkey[]; showLogos: boolean }) {
     const mappedTokens = new Map<string, MappedToken>();
     for (const { info: token, logoURI, symbol, name } of tokens) {
         const mintAddress = token.mint.toBase58();
@@ -156,60 +170,77 @@ function HoldingsSummaryTable({ tokens }: { tokens: TokenInfoWithPubkey[] }) {
 
         mappedTokens.set(mintAddress, {
             amount,
+            decimals: token.tokenAmount.decimals,
             logoURI,
             name,
+            rawAmount: token.tokenAmount.amount,
             symbol,
         });
     }
 
-    const detailsList: React.ReactNode[] = [];
-    const showLogos = tokens.some(t => t.logoURI !== undefined);
-    mappedTokens.forEach((token, mintAddress) => {
-        detailsList.push(
-            <tr key={mintAddress}>
-                {showLogos && (
-                    <td className="w-1 p-0 text-center">
-                        {token.logoURI ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                alt="token icon"
-                                className="token-icon rounded-circle border border-4 border-gray-dark"
-                                height={16}
-                                src={token.logoURI}
-                                width={16}
-                            />
-                        ) : (
-                            <Identicon
-                                address={mintAddress}
-                                className="avatar-img identicon-wrapper identicon-wrapper-small"
-                                style={{ width: SMALL_IDENTICON_WIDTH }}
-                            />
-                        )}
-                    </td>
-                )}
-                <td>
-                    <Address pubkey={new PublicKey(mintAddress)} link tokenLabelInfo={token} useMetadata />
-                </td>
-                <td>
-                    {token.amount} {token.symbol}
-                </td>
-            </tr>
-        );
-    });
+    return (
+        <tbody className="list">
+            {Array.from(mappedTokens.entries()).map(([mintAddress, token]) => (
+                <TokenRow
+                    key={mintAddress}
+                    mintAddress={mintAddress}
+                    token={token}
+                    showLogo={showLogos}
+                    showAccountAddress={false}
+                />
+            ))}
+        </tbody>
+    );
+}
+
+type TokenRowProps = {
+    mintAddress: string;
+    token: MappedToken;
+    showLogo: boolean;
+    showAccountAddress: boolean;
+};
+
+function TokenRow({ mintAddress, token, showLogo, showAccountAddress }: TokenRowProps) {
+    const [_, scaledUiAmountMultiplier] = useScaledUiAmountForMint(mintAddress, token.rawAmount);
 
     return (
-        <div className="table-responsive mb-0">
-            <table className="table table-sm table-nowrap card-table">
-                <thead>
-                    <tr>
-                        {showLogos && <th className="text-muted w-1 p-0 text-center">Logo</th>}
-                        <th className="text-muted">Mint Address</th>
-                        <th className="text-muted">Total Balance</th>
-                    </tr>
-                </thead>
-                <tbody className="list">{detailsList}</tbody>
-            </table>
-        </div>
+        <tr>
+            {showLogo && (
+                <td className="w-1 p-0 text-center">
+                    {token.logoURI ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            alt="token icon"
+                            className="token-icon rounded-circle border border-4 border-gray-dark"
+                            height={16}
+                            src={token.logoURI}
+                            width={16}
+                        />
+                    ) : (
+                        <Identicon
+                            address={mintAddress}
+                            className="avatar-img identicon-wrapper identicon-wrapper-small"
+                            style={{ width: SMALL_IDENTICON_WIDTH }}
+                        />
+                    )}
+                </td>
+            )}
+            {showAccountAddress && token.pubkey && (
+                <td>
+                    <Address pubkey={new PublicKey(token.pubkey)} link tokenLabelInfo={token} useMetadata />
+                </td>
+            )}
+            <td>
+                <Address pubkey={new PublicKey(mintAddress)} link tokenLabelInfo={token} useMetadata />
+            </td>
+            <td>
+                {token.amount} {token.symbol}
+                <ScaledUiAmountMultiplierTooltip
+                    rawAmount={normalizeTokenAmount(Number(token.rawAmount), token.decimals || 0).toString()}
+                    scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                />
+            </td>
+        </tr>
     );
 }
 

@@ -1,17 +1,18 @@
+import ScaledUiAmountMultiplierTooltip from '@components/account/token-extensions/ScaledUiAmountMultiplierTooltip';
 import { Address } from '@components/common/Address';
 import { Copyable } from '@components/common/Copyable';
 import { TableCardBody } from '@components/common/TableCardBody';
 import { Account, NFTData, TokenProgramData, useFetchAccountInfo } from '@providers/accounts';
-import { TOKEN_2022_PROGRAM_ID } from '@providers/accounts/tokens';
+import { TOKEN_2022_PROGRAM_ID, useScaledUiAmountForMint } from '@providers/accounts/tokens';
 import isMetaplexNFT from '@providers/accounts/utils/isMetaplexNFT';
 import { useCluster } from '@providers/cluster';
 import { PublicKey } from '@solana/web3.js';
 import { Cluster } from '@utils/cluster';
 import { displayTimestamp } from '@utils/date';
 import { normalizeTokenAmount } from '@utils/index';
+import { getCurrentTokenScaledUiAmountMultiplier } from '@utils/token-info';
 import { addressLabel } from '@utils/tx';
 import { MintAccountInfo, MultisigAccountInfo, TokenAccount, TokenAccountInfo } from '@validators/accounts/token';
-import { TokenExtensionType } from '@validators/accounts/token-extension';
 import {
     ConfidentialTransferAccount,
     ConfidentialTransferFeeAmount,
@@ -29,6 +30,7 @@ import {
     PermanentDelegate,
     ScaledUiAmountConfig,
     TokenExtension,
+    TokenExtensionType,
     TokenGroup,
     TokenGroupMember,
     TokenMetadata,
@@ -131,6 +133,7 @@ function FungibleTokenMintAccountCard({
 
     const mintExtensions = mintInfo.extensions?.slice();
     mintExtensions?.sort(cmpExtension);
+    const scaledUiAmountMultiplier = getCurrentTokenScaledUiAmountMultiplier(mintExtensions);
 
     return (
         <div className="card">
@@ -157,9 +160,18 @@ function FungibleTokenMintAccountCard({
                 <tr>
                     <td>{mintInfo.mintAuthority === null ? 'Fixed Supply' : 'Current Supply'}</td>
                     <td className="text-lg-end">
-                        {normalizeTokenAmount(mintInfo.supply, mintInfo.decimals).toLocaleString('en-US', {
-                            maximumFractionDigits: 20,
-                        })}
+                        <span>
+                            {normalizeTokenAmount(
+                                Number(mintInfo.supply) * Number(scaledUiAmountMultiplier),
+                                mintInfo.decimals
+                            ).toLocaleString('en-US', {
+                                maximumFractionDigits: 20,
+                            })}
+                        </span>
+                        <ScaledUiAmountMultiplierTooltip
+                            rawAmount={normalizeTokenAmount(Number(mintInfo.supply), mintInfo.decimals).toString()}
+                            scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                        />
                     </td>
                 </tr>
                 {tokenInfo?.extensions?.website && (
@@ -338,6 +350,7 @@ async function fetchTokenInfo([_, address, cluster, url]: ['get-token-info', str
 
 function TokenAccountCard({ account, info }: { account: Account; info: TokenAccountInfo }) {
     const refresh = useFetchAccountInfo();
+    const [_, scaledUiAmountMultiplier] = useScaledUiAmountForMint(info.mint.toBase58(), info.tokenAmount.amount);
     const { cluster, url } = useCluster();
     const label = addressLabel(account.pubkey.toBase58(), cluster);
     const swrKey = useMemo(() => getTokenInfoSwrKey(info.mint.toString(), cluster, url), [cluster, info.mint, url]);
@@ -402,7 +415,16 @@ function TokenAccountCard({ account, info }: { account: Account; info: TokenAcco
                 </tr>
                 <tr>
                     <td>Token balance {typeof symbol === 'string' && `(${symbol})`}</td>
-                    <td className="text-lg-end">{balance}</td>
+                    <td className="text-lg-end">
+                        {balance}
+                        <ScaledUiAmountMultiplierTooltip
+                            rawAmount={normalizeTokenAmount(
+                                Number(info.tokenAmount.amount),
+                                info.tokenAmount.decimals || 0
+                            ).toString()}
+                            scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                        />
+                    </td>
                 </tr>
                 <tr>
                     <td>Status</td>

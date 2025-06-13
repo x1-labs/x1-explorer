@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { ChainId, Client, Token, UtlConfig } from '@solflare-wallet/utl-sdk';
-
-import { Cluster } from './cluster';
+import { Cluster } from '@utils/cluster';
+import { TokenExtension } from '@validators/accounts/token-extension';
 
 type TokenExtensions = {
     readonly website?: string;
@@ -174,4 +174,15 @@ export async function getTokenInfos(
     if (!client) return undefined;
     const tokens = await client.fetchMints(addresses);
     return tokens;
+}
+
+export function getCurrentTokenScaledUiAmountMultiplier(extensions: Array<TokenExtension> | undefined): string {
+    const scaledUiAmountConfig = extensions?.find(extension => extension.extension === 'scaledUiAmountConfig');
+    if (!scaledUiAmountConfig) {
+        return '1';
+    }
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    return currentTimestamp >= scaledUiAmountConfig.state.newMultiplierEffectiveTimestamp
+        ? scaledUiAmountConfig.state.newMultiplier
+        : scaledUiAmountConfig.state.multiplier;
 }
