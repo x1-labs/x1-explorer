@@ -111,6 +111,7 @@ export function populatePartialParsedTokenExtension(
         }
         case 'transferHookAccount': {
             return {
+                description: "This is only set to 'transferring' inside the transferHook CPI",
                 externalLinks: populateExternalLinks(populateSolanaDevelopersLink('transfer-hook')),
                 name: 'Transfer Hook Account Info',
                 status: 'active',
