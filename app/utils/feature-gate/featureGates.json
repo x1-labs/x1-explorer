@@ -552,7 +552,7 @@
     "testnet_activation_epoch": 794,
     "devnet_activation_epoch": 895,
     "comms_required": null,
-    "mainnet_activation_epoch": null,
+    "mainnet_activation_epoch": 808,
     "description": "Remove hashing of modified account state in favor of the Accounts Lattice Hash"
   },
   {
@@ -666,7 +666,7 @@
     "testnet_activation_epoch": 795,
     "devnet_activation_epoch": 896,
     "comms_required": null,
-    "mainnet_activation_epoch": null,
+    "mainnet_activation_epoch": 809,
     "description": null
   },
   {
