@@ -119,6 +119,14 @@ async function getFullLegacyTokenInfoUsingCdn(
     return tokenInfo;
 }
 
+export function isRedactedTokenAddress(address: string): boolean {
+    return (
+        process.env.NEXT_PUBLIC_BAD_TOKENS?.split(',')
+            .map(addr => addr.trim())
+            .includes(address) ?? false
+    );
+}
+
 /**
  * Get the full token info from a CDN with the legacy token list
  * The UTL SDK only returns the most common fields, we sometimes need eg extensions
@@ -130,6 +138,9 @@ export async function getFullTokenInfo(
     cluster: Cluster,
     connectionString: string
 ): Promise<FullTokenInfo | undefined> {
+    if (isRedactedTokenAddress(address.toBase58())) {
+        return undefined;
+    }
     const chainId = getChainId(cluster);
     if (!chainId) return undefined;
 
