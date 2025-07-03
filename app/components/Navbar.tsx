@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useSelectedLayoutSegment, useSelectedLayoutSegments } from 'next/navigation';
 import React from 'react';
 
-
 import { ClusterStatusButton } from './ClusterStatusButton';
 
 export function Navbar() {
