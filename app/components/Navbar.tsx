@@ -1,9 +1,12 @@
 'use client';
 
+import Logo from '@img/logos-solana/dark-explorer-logo.svg';
 import { useClusterPath } from '@utils/url';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useSelectedLayoutSegment, useSelectedLayoutSegments } from 'next/navigation';
 import React from 'react';
+
 
 import { ClusterStatusButton } from './ClusterStatusButton';
 
@@ -20,8 +23,7 @@ export function Navbar() {
         <nav className="navbar navbar-expand-md navbar-light">
             <div className="container">
                 <Link href={homePath}>
-                    {/*<Image alt="Solana Explorer" height={22} src={Logo} width={250} />*/}
-                    X1 Network ™
+                    <Image alt="X1 Explorer" height={22} src={Logo} className="" />
                 </Link>
 
                 <button className="navbar-toggler" type="button" onClick={() => setCollapse(value => !value)}>
