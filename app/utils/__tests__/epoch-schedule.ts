@@ -1,4 +1,11 @@
-import { EpochSchedule, getEpochForSlot, getFirstSlotInEpoch, getLastSlotInEpoch } from '../epoch-schedule';
+import { Cluster } from '../cluster';
+import {
+    EpochSchedule,
+    getEpochForSlot,
+    getFirstSlotInEpoch,
+    getLastSlotInEpoch,
+    getMaxComputeUnitsInBlock,
+} from '../epoch-schedule';
 
 describe('getEpoch', () => {
     it('returns the correct epoch for a slot after `firstNormalSlot`', () => {
@@ -79,5 +86,51 @@ describe('getLastSlotInEpoch', () => {
         expect(getLastSlotInEpoch(schedule, 1n)).toEqual(95n);
         expect(getLastSlotInEpoch(schedule, 2n)).toEqual(223n);
         expect(getLastSlotInEpoch(schedule, 10n)).toEqual(65_503n);
+    });
+});
+
+describe('getMaxComputeUnitsForEpoch', () => {
+    it('returns the correct max compute units for an epoch on mainnet', () => {
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: 0n })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: 769n })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: 770n })).toEqual(50_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: 821n })).toEqual(50_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: 822n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: 823n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: undefined })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.MainnetBeta, epoch: -1n })).toEqual(48_000_000);
+    });
+
+    it('returns the correct max compute units for an epoch on devnet', () => {
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: 0n })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: 856n })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: 857n })).toEqual(50_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: 914n })).toEqual(50_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: 915n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: 916n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: undefined })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Devnet, epoch: -1n })).toEqual(48_000_000);
+    });
+
+    it('returns the correct max compute units for an epoch on testnet', () => {
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: 0n })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: 763n })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: 764n })).toEqual(50_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: 811n })).toEqual(50_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: 812n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: 813n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: undefined })).toEqual(48_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Testnet, epoch: -1n })).toEqual(48_000_000);
+    });
+
+    it('returns the correct max compute units for an epoch on custom', () => {
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: 0n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: 769n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: 770n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: 821n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: 822n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: 823n })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: undefined })).toEqual(60_000_000);
+        expect(getMaxComputeUnitsInBlock({ cluster: Cluster.Custom, epoch: -1n })).toEqual(60_000_000);
     });
 });
