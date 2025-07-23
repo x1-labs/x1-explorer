@@ -469,6 +469,7 @@ function OverviewCard({ message, raw, onClear }: { message: VersionedMessage; ra
                             </div>
                         </td>
                     </tr>
+
                     <tr>
                         <td>
                             <div className="d-flex align-items-start flex-column">
