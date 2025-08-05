@@ -145,6 +145,10 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.Devnet],
         name: PROGRAM_NAMES.WORMHOLE_CORE,
     },
+    '45bQSp8Xgvavg5fj6PAyqxR2Gd8nUbCFLFcsapmrFcyU': {
+        deployments: LIVE_CLUSTERS,
+        name: PROGRAM_NAMES.STAKE_POOL,
+    },
     '5ZfZAwP2m93waazg8DkrrVmsupeiPEvaEHowiUP7UAbJ': {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.SOLANART_GO,
@@ -352,10 +356,6 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.RAYDIUM_LP_1,
     },
-    SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy: {
-        deployments: LIVE_CLUSTERS,
-        name: PROGRAM_NAMES.STAKE_POOL,
-    },
     SSwpMgqNDsyV7mAgN9ady4bDVu5ySjmmXejXvy2vLt1: {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.STEP_SWAP,
@@ -476,7 +476,6 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.WORMHOLE_TOKEN,
     },
- 
 };
 
 export const SPECIAL_IDS: { [key: string]: string } = {
