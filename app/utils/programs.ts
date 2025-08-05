@@ -145,7 +145,7 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.Devnet],
         name: PROGRAM_NAMES.WORMHOLE_CORE,
     },
-    '45bQSp8Xgvavg5fj6PAyqxR2Gd8nUbCFLFcsapmrFcyU': {
+    '46SSibLTiTPa14iBnzFy9xyVtNGJfTV8U4jrnJTJ9VYu': {
         deployments: LIVE_CLUSTERS,
         name: PROGRAM_NAMES.STAKE_POOL,
     },
