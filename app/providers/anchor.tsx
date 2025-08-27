@@ -4,7 +4,7 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { useMemo } from 'react';
 
 import { Cluster } from '../utils/cluster';
-import { formatIdl } from '../utils/convertLegacyIdl';
+import { formatSerdeIdl, getFormattedIdl } from '../utils/convertLegacyIdl';
 
 const cachedAnchorProgramPromises: Record<
     string,
@@ -83,13 +83,14 @@ export function useAnchorProgram(
     const program: Program<Idl> | null = useMemo(() => {
         if (!idl) return null;
         try {
-            const program = new Program(formatIdl(idl, programAddress), getProvider(url));
+            const program = new Program(getFormattedIdl(formatSerdeIdl, idl, programAddress), getProvider(url));
             return program;
         } catch (e) {
             console.error('Error creating anchor program for', programAddress, e, { idl });
             return null;
         }
     }, [idl, programAddress, url]);
+
     return { idl, program };
 }
 
