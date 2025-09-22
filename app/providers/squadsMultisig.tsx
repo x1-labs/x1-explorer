@@ -4,7 +4,7 @@ import { Cluster } from '@utils/cluster';
 import useSWRImmutable from 'swr/immutable';
 
 export const SQUADS_V3_ADDRESS = 'SMPLecH534NA9acpos4G6x7uf3LWbCAwZQE9e8ZekMu';
-export const SQUADS_V4_ADDRESS = 'SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf';
+export const SQUADS_V4_ADDRESS = 'DDL3Xp6ie85DXgiPkXJ7abUyS2tGv4CGEod2DeQXQ941';
 
 export type SquadsMultisigVersion = 'v3' | 'v4';
 export type SquadsMultisigMapInfo = {

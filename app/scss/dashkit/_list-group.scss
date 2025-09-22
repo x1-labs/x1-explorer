@@ -13,9 +13,9 @@
 //
 // Changing the Bootstrap color modifier classes to be full opacity background with yiq calculated font color
 
-@each $color, $value in $theme-colors {
-    @include list-group-item-variant($color, $value, color-yiq($value));
-}
+//@each $color, $value in $theme-colors {
+//    @include list-group-item-variant($color, $value, color-yiq($value));
+//}
 
 // List group sizing
 
