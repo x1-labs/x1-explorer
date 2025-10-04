@@ -65,6 +65,25 @@ function parseQuery(searchParams: ReadonlyURLSearchParams | null): Cluster {
     }
 }
 
+function parseUrl(searchParams: ReadonlyURLSearchParams | null): Cluster {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // Check for X1 explorer specific hostnames
+    if (hostname === 'explorer.mainnet.x1.xyz' || hostname.includes('mainnet')) {
+      return Cluster.MainnetBeta;
+    }
+    if (hostname === 'explorer.testnet.x1.xyz' || hostname.includes('testnet')) {
+      return Cluster.Testnet;
+    }
+    if (hostname === 'explorer.devnet.x1.xyz' || hostname.includes('devnet')) {
+      return Cluster.Devnet;
+    }
+  }
+
+  return parseQuery(searchParams);
+}
+
 const ModalContext = createContext<[boolean, SetShowModal] | undefined>(undefined);
 const StateContext = createContext<State | undefined>(undefined);
 const DispatchContext = createContext<Dispatch | undefined>(undefined);
@@ -78,7 +97,7 @@ export function ClusterProvider({ children }: ClusterProviderProps) {
     });
     const modalState = useState(false);
     const searchParams = useSearchParams();
-    const cluster = parseQuery(searchParams);
+    const cluster = parseUrl(searchParams);
     const enableCustomUrl = localStorageIsAvailable() && localStorage.getItem('enableCustomUrl') !== null;
     const customUrl = (enableCustomUrl && searchParams?.get('customUrl')) || state.customUrl;
     const pathname = usePathname();

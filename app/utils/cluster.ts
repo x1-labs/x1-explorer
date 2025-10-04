@@ -13,7 +13,7 @@ export enum Cluster {
 
 export const CLUSTERS = [
   Cluster.MainnetBeta,
-    // Cluster.Testnet,
+    Cluster.Testnet,
     // Cluster.Devnet,
     Cluster.Custom
 ];
@@ -22,8 +22,8 @@ export function clusterSlug(cluster: Cluster): string {
     switch (cluster) {
         case Cluster.MainnetBeta:
             return 'mainnet-beta';
-        // case Cluster.Testnet:
-        //     return 'testnet';
+        case Cluster.Testnet:
+            return 'testnet';
         // case Cluster.Devnet:
         //     return 'devnet';
         case Cluster.Custom:
@@ -36,9 +36,9 @@ export function clusterSlug(cluster: Cluster): string {
 export function clusterName(cluster: Cluster): string {
     switch (cluster) {
         case Cluster.MainnetBeta:
-            return 'X1 Network ™ (Testnet)';
-        // case Cluster.Testnet:
-        //     return 'Testnet';
+            return 'X1 Network ™ (Mainnet)';
+        case Cluster.Testnet:
+          return 'X1 Network ™ (Testnet)';
         // case Cluster.Devnet:
         //     return 'Devnet';
         case Cluster.Custom:
@@ -48,9 +48,9 @@ export function clusterName(cluster: Cluster): string {
     return '';
 }
 
-export const MAINNET_BETA_URL = 'https://api.mainnet-beta.solana.com';
-export const TESTNET_URL = 'https://api.testnet.solana.com';
-export const DEVNET_URL = 'https://api.devnet.solana.com';
+export const MAINNET_BETA_URL = 'https://rpc.mainnet.x1.xyz';
+export const TESTNET_URL = 'https://rpc.testnet.x1.xyz';
+export const DEVNET_URL = 'https://rpc.devnet.x1.xyz';
 
 export function clusterUrl(cluster: Cluster, customUrl: string): string {
     const modifyUrl = (url: string): string => {

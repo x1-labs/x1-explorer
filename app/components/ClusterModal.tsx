@@ -104,6 +104,13 @@ function ClusterToggle() {
     }
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    
+    // Check if we're on an X1 explorer domain
+    const isX1Domain = typeof window !== 'undefined' && 
+        (window.location.hostname === 'explorer.mainnet.x1.xyz' || 
+         window.location.hostname === 'explorer.testnet.x1.xyz' ||
+         window.location.hostname === 'explorer.devnet.x1.xyz');
+    
     return (
         <div className="btn-group-toggle d-flex flex-wrap mb-4">
             {CLUSTERS.map((net, index) => {
@@ -113,15 +120,32 @@ function ClusterToggle() {
 
                 const btnClass = active ? `border-${activeSuffix} text-${activeSuffix}` : 'btn-white';
 
-                const nextSearchParams = new URLSearchParams(searchParams?.toString());
-                const slug = clusterSlug(net);
-                if (slug !== 'mainnet-beta') {
-                    nextSearchParams.set('cluster', slug);
+                let clusterUrl: string;
+                if (isX1Domain) {
+                    // Use hostname-based routing for X1 domains
+                    const slug = clusterSlug(net);
+                    const baseUrl = slug === 'mainnet-beta' ? 'https://explorer.mainnet.x1.xyz' : 
+                                   slug === 'testnet' ? 'https://explorer.testnet.x1.xyz' :
+                                   slug === 'devnet' ? 'https://explorer.devnet.x1.xyz' : '';
+                    
+                    // Preserve the current path and non-cluster search params
+                    const nextSearchParams = new URLSearchParams(searchParams?.toString());
+                    nextSearchParams.delete('cluster'); // Remove cluster param since we're using hostname
+                    const nextQueryString = nextSearchParams.toString();
+                    clusterUrl = `${baseUrl}${pathname}${nextQueryString ? `?${nextQueryString}` : ''}`;
                 } else {
-                    nextSearchParams.delete('cluster');
+                    // Use query parameter-based routing for non-X1 domains
+                    const nextSearchParams = new URLSearchParams(searchParams?.toString());
+                    const slug = clusterSlug(net);
+                    if (slug !== 'mainnet-beta') {
+                        nextSearchParams.set('cluster', slug);
+                    } else {
+                        nextSearchParams.delete('cluster');
+                    }
+                    const nextQueryString = nextSearchParams.toString();
+                    clusterUrl = `${pathname}${nextQueryString ? `?${nextQueryString}` : ''}`;
                 }
-                const nextQueryString = nextSearchParams.toString();
-                const clusterUrl = `${pathname}${nextQueryString ? `?${nextQueryString}` : ''}`;
+                
                 return (
                     <Link key={index} className={`btn col-12 mb-3 ${btnClass}`} href={clusterUrl}>
                         {clusterName(net)}
