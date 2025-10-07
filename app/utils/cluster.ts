@@ -21,7 +21,7 @@ export const CLUSTERS = [
 export function clusterSlug(cluster: Cluster): string {
     switch (cluster) {
         case Cluster.MainnetBeta:
-            return 'mainnet-beta';
+            return 'mainnet';
         case Cluster.Testnet:
             return 'testnet';
         // case Cluster.Devnet:

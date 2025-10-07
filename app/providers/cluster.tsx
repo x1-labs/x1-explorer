@@ -1,6 +1,6 @@
 'use client';
 
-import { Cluster, clusterName, ClusterStatus, clusterUrl, DEFAULT_CLUSTER } from '@utils/cluster';
+import { Cluster, clusterName, clusterSlug, ClusterStatus, clusterUrl, DEFAULT_CLUSTER } from '@utils/cluster';
 import { localStorageIsAvailable } from '@utils/local-storage';
 import { ReadonlyURLSearchParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
@@ -68,7 +68,7 @@ function parseQuery(searchParams: ReadonlyURLSearchParams | null): Cluster {
 function parseUrl(searchParams: ReadonlyURLSearchParams | null): Cluster {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    
+
     // Check for X1 explorer specific hostnames
     if (hostname === 'explorer.mainnet.x1.xyz' || hostname.includes('mainnet')) {
       return Cluster.MainnetBeta;
@@ -195,6 +195,7 @@ export function useCluster() {
     return {
         ...context,
         name: clusterName(context.cluster),
+        slug: clusterSlug(context.cluster),
         url: clusterUrl(context.cluster, context.customUrl),
     };
 }

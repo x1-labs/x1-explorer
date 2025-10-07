@@ -46,8 +46,9 @@ export async function fetchXolanaValidators(
   limit = 500,
   offset = 0,
   sort = 'activatedStake',
+  network = 'mainnet'
 ): Promise<ValidatorEntity[]> {
-  const data = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/x1/validators?limit=${limit}&offset=${offset}&sort=${sort}`);
+  const data = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/x1/validators?limit=${limit}&offset=${offset}&sort=${sort}&network=${network}`);
 
   if (!data.ok) {
     throw new Error("Error fetching validators");

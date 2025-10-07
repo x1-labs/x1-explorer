@@ -1,5 +1,6 @@
 import { SolBalance } from '@components/common/SolBalance';
 import ValidatorInfo from "@components/ValidatorInfo";
+import { useCluster } from "@providers/cluster";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -10,15 +11,17 @@ export function ValidatorsCard() {
   const [validators, setValidators] = useState<ValidatorEntity[] | null>(null);
   const [sort, setSort] = useState<string>('activatedStake');
   const router = useRouter();
+  const cluster = useCluster();
+
 
   useEffect(() => {
     const fetchValidators = async () => {
-            const response = await fetchXolanaValidators(500, 0, sort);
+            const response = await fetchXolanaValidators(500, 0, sort, cluster.slug);
             setValidators(response);
         };
 
         fetchValidators().then();
-    }, [sort]);
+    }, [sort, cluster]);
 
   const handleRowClick = (votePubkey: string) => {
     router.push(`/address/${votePubkey}`);
