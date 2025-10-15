@@ -32,7 +32,7 @@ const ValidatorInfo: React.FC<ValidatorInfoProps> = ({ validator }) => {
       );
     }
     const skippingRateThreshold = parseFloat(process.env.NEXT_PUBLIC_SKIPPING_RATE_THRESHOLD ?? '0.1');
-    if (validator.skipRateLast50Epochs > skippingRateThreshold) {
+    if (validator.skipRateLast10Epochs > skippingRateThreshold) {
       return (
         <span className="position-absolute top-0 end-0 badge rounded-pill bg-warning">
           Skipping

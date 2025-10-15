@@ -109,13 +109,13 @@ export function ValidatorsCard() {
                                     <a href="#" onClick={() => setSort('voteCountPreviousEpoch')}>Votes</a>
                                   </th>
                                   <th colSpan={1} className="text-muted text-end pt-1 pb-2 border-start  d-none d-md-table-cell">
-                                      <a href="#" onClick={() => setSort('blocksProducedLast50Epochs')}>Assigned</a>
+                                      <a href="#" onClick={() => setSort('blocksProducedLast10Epochs')}>Assigned</a>
                                   </th>
                                   <th colSpan={1} className="text-muted text-end pt-1 pb-2  d-none d-md-table-cell">
-                                    <a href="#" onClick={() => setSort('skippedSlotsLast50Epochs')}>Skipped</a>
+                                    <a href="#" onClick={() => setSort('skippedSlotsLast10Epochs')}>Skipped</a>
                                   </th>
                                   <th colSpan={1} className="text-muted text-end pt-1 pb-2  d-none d-md-table-cell">
-                                    <a href="#" onClick={() => setSort('skipRateLast50Epochs')}>Skip Rate</a>
+                                    <a href="#" onClick={() => setSort('skipRateLast10Epochs')}>Skip Rate</a>
                                   </th>
                                 </tr>
                             </thead>
