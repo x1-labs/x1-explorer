@@ -16,7 +16,7 @@ export function ValidatorsCard() {
 
   useEffect(() => {
     const fetchValidators = async () => {
-            const response = await fetchXolanaValidators(500, 0, sort, cluster.slug);
+            const response = await fetchXolanaValidators(1000, 0, sort, cluster.slug);
             setValidators(response);
         };
 
@@ -52,26 +52,26 @@ export function ValidatorsCard() {
         {validator.voteCountPreviousEpoch?.toLocaleString()}
         <hr />
         <div>Block Production</div>
-        <div className="text-white-50">(Last 50 Epochs)</div>
+        <div className="text-white-50">(Last 10 Epochs)</div>
         <div className="text-muted">Assigned:</div>
-        {validator.leaderSlotsLast50Epochs?.toLocaleString()}
+        {validator.leaderSlotsLast10Epochs?.toLocaleString()}
         <div className="text-muted">Skipped:</div>
-        {validator.skippedSlotsLast50Epochs?.toLocaleString()}
+        {validator.skippedSlotsLast10Epochs?.toLocaleString()}
       </td>
       <td className="text-center border-start d-none d-md-table-cell">
         {validator.voteCountPreviousEpoch?.toLocaleString()}
       </td>
       <td className="text-end border-start d-none d-md-table-cell">
-        {validator.leaderSlotsLast50Epochs?.toLocaleString()}
+        {validator.leaderSlotsLast10Epochs?.toLocaleString()}
       </td>
       <td className="text-end d-none d-md-table-cell">
         <span className="m-2">
-          {validator.skippedSlotsLast50Epochs?.toLocaleString()}
+          {validator.skippedSlotsLast10Epochs?.toLocaleString()}
         </span>
       </td>
       <td className="text-end d-none d-md-table-cell">
         <span className="m-2 text-muted">
-          {(validator.skipRateLast50Epochs * 100).toFixed(1)}%
+          {(validator.skipRateLast10Epochs * 100).toFixed(1)}%
         </span>
       </td>
     </tr>
@@ -97,7 +97,7 @@ export function ValidatorsCard() {
                                   <th className="text-muted border-start" style={{ minWidth: 150 }}></th>
                                   <th className="text-muted pb-1 text-end border-start text-center d-none d-md-table-cell" style={{ minWidth: 120 }}>Last Epoch</th>
                                   <th colSpan={3} className="text-muted text-center pb-1 border-start d-none d-md-table-cell" style={{ minWidth: 270 }}>
-                                    Block Production (Last 50 Epochs)
+                                    Block Production (Last 10 Epochs)
                                   </th>
                                 </tr>
                                 <tr>

@@ -20,30 +20,24 @@ export interface ValidatorEntity {
   iconUrl: string;
   website: string;
   voteCountPreviousEpoch: number;
-  voteCountLast50Epochs: number;
-  voteCountLast500Epochs: number;
+  voteCountLast10Epochs: number;
   voteCreditsPreviousEpoch: number;
-  voteCreditsLast50Epochs: number;
-  voteCreditsLast500Epochs: number;
+  voteCreditsLast10Epochs: number;
   leaderSlotsPreviousEpoch: number
   blocksProducedPreviousEpoch: number
   skippedSlotsPreviousEpoch: number
   skipRatePreviousEpoch: number
-  leaderSlotsLast50Epochs: number
-  blocksProducedLast50Epochs: number
-  skipRateLast50Epochs: number
-  skippedSlotsLast50Epochs: number
-  leaderSlotsLast500Epochs: number
-  blocksProducedLast500Epochs: number
-  skippedSlotsLast500Epochs: number
-  skipRateLast500Epochs: number
+  leaderSlotsLast10Epochs: number
+  blocksProducedLast10Epochs: number
+  skipRateLast10Epochs: number
+  skippedSlotsLast10Epochs: number
   activatedStakePercentage: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export async function fetchXolanaValidators(
-  limit = 500,
+  limit = 1000,
   offset = 0,
   sort = 'activatedStake',
   network = 'mainnet'
