@@ -2,7 +2,7 @@ import { SolBalance } from '@components/common/SolBalance';
 import ValidatorInfo from "@components/ValidatorInfo";
 import { useCluster } from "@providers/cluster";
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 import { fetchXolanaValidators, ValidatorEntity } from "@/app/api";
 
@@ -12,16 +12,26 @@ export function ValidatorsCard() {
   const [sort, setSort] = useState<string>('activatedStake');
   const router = useRouter();
   const cluster = useCluster();
+  
+  // Memoize cluster slug to prevent unnecessary re-renders
+  const clusterSlug = useMemo(() => cluster.slug, [cluster.slug]);
 
 
   useEffect(() => {
     const fetchValidators = async () => {
-            const response = await fetchXolanaValidators(1000, 0, sort, cluster.slug);
-            setValidators(response);
-        };
+      const response = await fetchXolanaValidators(1000, 0, sort, clusterSlug);
+      setValidators(response);
+    };
 
-        fetchValidators().then();
-    }, [sort, cluster]);
+    // Fetch immediately on mount or when sort/cluster changes
+    fetchValidators();
+
+    // Set up interval to fetch every 30 seconds
+    const interval = setInterval(fetchValidators, 30000);
+
+    // Cleanup interval on unmount or dependency change
+    return () => clearInterval(interval);
+  }, [sort, clusterSlug]);
 
   const handleRowClick = (votePubkey: string) => {
     router.push(`/address/${votePubkey}`);
