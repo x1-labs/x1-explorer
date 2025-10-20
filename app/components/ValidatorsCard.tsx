@@ -2,7 +2,7 @@ import { SolBalance } from '@components/common/SolBalance';
 import ValidatorInfo from "@components/ValidatorInfo";
 import { useCluster } from "@providers/cluster";
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo,useState } from 'react';
 
 import { fetchXolanaValidators, ValidatorEntity } from "@/app/api";
 
@@ -12,7 +12,7 @@ export function ValidatorsCard() {
   const [sort, setSort] = useState<string>('activatedStake');
   const router = useRouter();
   const cluster = useCluster();
-  
+
   // Memoize cluster slug to prevent unnecessary re-renders
   const clusterSlug = useMemo(() => cluster.slug, [cluster.slug]);
 
