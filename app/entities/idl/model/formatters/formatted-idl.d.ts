@@ -1,3 +1,5 @@
+import type { Idl } from '@coral-xyz/anchor';
+
 // renderable idl for ui
 export type FormattedIdl = {
     instructions?: InstructionData[];
@@ -27,7 +29,7 @@ export type InstructionAccountData = {
     writable?: boolean;
     signer?: boolean;
     optional?: boolean;
-    pda?: boolean; // TODO: may be keep seeds inside?
+    pda?: boolean;
 };
 
 export type ErrorData = {
@@ -97,3 +99,5 @@ export type UnknownFieldType = {
 };
 
 export type FieldType = StructFieldType | EnumFieldType | TypeFieldType | UnknownFieldType;
+
+export type IdlFormatter = (idl: any, programAddress?: string) => Idl;
