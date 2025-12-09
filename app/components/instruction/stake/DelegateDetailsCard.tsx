@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { ParsedInstruction, SignatureResult, StakeProgram } from '@solana/web3.js';
 import React from 'react';
 
@@ -48,7 +49,7 @@ export function DelegateDetailsCard(props: {
             <tr>
                 <td>Authority Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.stakeAuthority} alignRight link />
+                    <AddressWithDomain pubkey={info.stakeAuthority} alignRight link />
                 </td>
             </tr>
         </InstructionCard>
