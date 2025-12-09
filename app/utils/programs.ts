@@ -99,6 +99,13 @@ export enum PROGRAM_NAMES {
     //Xendex
     XENDEX_AMM = 'XenDEX AMM Program',
     XENDEX_STAKING = 'XenDEX Staking Program',
+
+    // X1NS
+    X1NS = 'X1NS Domain Name Service',
+    X1NS_NAME_TOKENIZER = 'X1NS Name Tokenizer',
+    X1NS_RECORDS = 'X1NS Records Program',
+    X1NS_SPL_NAME_SERVICE = 'X1NS SPL Name Service',
+    X1_VERIFY = 'X1 Program Verification',
 }
 
 const ALL_CLUSTERS = [Cluster.Custom, Cluster.Devnet, Cluster.Testnet, Cluster.MainnetBeta];
@@ -352,6 +359,10 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: LIVE_CLUSTERS,
         name: PROGRAM_NAMES.QUARRY_REGISTRY,
     },
+    RECQbMcEjcFLj2nDLeHS387mEPqhgkBRoWkXLCpk18S: {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.X1NS_RECORDS,
+    },
     RVKd61ztZW9GUwhRbbLoYVRE5Xf1B2tVscKqwZqXgEr: {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.RAYDIUM_LP_1,
@@ -408,6 +419,10 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.SERUM_POOL,
     },
+    X1NS1M4Lh9zwpYe7Mi2RKyy7QWq7dRtqyr7KxsLyUn5: {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.X1NS,
+    },
     auctxRXPeJoc4817jDhf4HbjnhEcr1cCXenosMhK5R8: {
         deployments: LIVE_CLUSTERS,
         name: PROGRAM_NAMES.NFT_AUCTION,
@@ -448,9 +463,21 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
         deployments: [Cluster.MainnetBeta],
         name: PROGRAM_NAMES.MANGO_3,
     },
+    nameQyUhZQQgnirGbbJRR9ECWSdq1W7mMaNUZZTBvtq: {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.X1NS_SPL_NAME_SERVICE,
+    },
     namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX: {
         deployments: LIVE_CLUSTERS,
         name: PROGRAM_NAMES.NAME,
+    },
+    nfTbQtRpscYq1SGCkadj44Ka13EEqGMbBoq7ZhSefUs: {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.X1NS_NAME_TOKENIZER,
+    },
+    verifyZt9Hkg3sscFx6xYy16BN9cQB3UfnGh55D8pXh: {
+        deployments: [Cluster.MainnetBeta],
+        name: PROGRAM_NAMES.X1_VERIFY,
     },
     oreV2ZymfyeXgNgBdqMkumTqqAprVqgBWQfoYkrtKWQ: {
         deployments: [Cluster.MainnetBeta],
