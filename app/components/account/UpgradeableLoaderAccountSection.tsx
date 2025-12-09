@@ -1,5 +1,6 @@
 import { UnknownAccountCard } from '@components/account/UnknownAccountCard';
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { DownloadableIcon } from '@components/common/Downloadable';
 import { InfoTooltip } from '@components/common/InfoTooltip';
 import { SecurityTXTBadge } from '@components/common/SecurityTXTBadge';
@@ -149,7 +150,7 @@ export function UpgradeableProgramSection({
                                         {cluster == Cluster.MainnetBeta && squadMapInfo?.isSquad ? (
                                             <MultisigBadge pubkey={account.pubkey} />
                                         ) : null}
-                                        <Address pubkey={programData.authority} alignRight link />
+                                        <AddressWithDomain pubkey={programData.authority} alignRight link />
                                     </td>
                                 </tr>
                             </>
@@ -174,8 +175,8 @@ function MultisigBadge({ pubkey }: { pubkey: PublicKey }) {
 
 function SecurityLabel() {
     return (
-        <InfoTooltip text="Security.txt helps security researchers to contact developers if they find security bugs.">
-            <Link rel="noopener noreferrer" target="_blank" href="https://github.com/neodyme-labs/solana-security-txt">
+        <InfoTooltip text="Security.txt helps security researchers to contact developers if they find security bugs. Based on solana-security-txt by Neodyme Labs.">
+            <Link rel="noopener noreferrer" target="_blank" href="https://github.com/Xenian84/x1-security-txt">
                 <span className="security-txt-link-color-hack-reee">Security.txt</span>
                 <ExternalLink className="align-text-top ms-2" size={13} />
             </Link>
@@ -185,11 +186,11 @@ function SecurityLabel() {
 
 function VerifiedLabel() {
     return (
-        <InfoTooltip text="Verified builds allow users can ensure that the hash of the on-chain program matches the hash of the program of the given codebase (registry hosted by osec.io).">
+        <InfoTooltip text="Verified builds allow users to ensure that the hash of the on-chain program matches the hash of the program of the given codebase (registry hosted by verify.x1ns.xyz).">
             <Link
                 rel="noopener noreferrer"
                 target="_blank"
-                href="https://github.com/Ellipsis-Labs/solana-verifiable-build"
+                href="https://verify.x1ns.xyz"
             >
                 <span className="security-txt-link-color-hack-reee">Verified Build</span>
                 <ExternalLink className="align-text-top ms-2" size={13} />
@@ -303,7 +304,7 @@ export function UpgradeableProgramBufferSection({
                     <tr>
                         <td>Deploy Authority</td>
                         <td className="text-lg-end">
-                            <Address pubkey={programBuffer.authority} alignRight link />
+                            <AddressWithDomain pubkey={programBuffer.authority} alignRight link />
                         </td>
                     </tr>
                 )}

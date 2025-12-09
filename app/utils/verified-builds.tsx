@@ -7,8 +7,9 @@ import { useCluster } from '../providers/cluster';
 import { ProgramDataAccountInfo } from '../validators/accounts/upgradeable-program';
 import { Cluster } from './cluster';
 
-const OSEC_REGISTRY_URL = 'https://verify.osec.io';
-const VERIFY_PROGRAM_ID = 'verifycLy8mB96wd9wqq3WDXQwM4oU6r42Th37Db9fC';
+// X1 Verification - Use X1-specific verification service
+const OSEC_REGISTRY_URL = process.env.NEXT_PUBLIC_X1_VERIFY_API_URL || 'https://verify.x1ns.xyz';
+const VERIFY_PROGRAM_ID = process.env.NEXT_PUBLIC_X1_VERIFY_PROGRAM_ID || 'verifyZt9Hkg3sscFx6xYy16BN9cQB3UfnGh55D8pXh';
 
 export enum VerificationStatus {
     Verified = 'Verified Build',
@@ -144,14 +145,15 @@ function useEnrichedOsecInfo({
     const { program: accountAnchorProgram } = useAnchorProgram(VERIFY_PROGRAM_ID, connection.rpcEndpoint);
 
     // Fetch the PDA derived from the program upgrade authority
+    // Try Anchor program first, fallback to raw account fetch if IDL not available
     const {
         data: pdaData,
         error: pdaError,
         isLoading: isPdaLoading,
     } = useSWRImmutable(
-        accountAnchorProgram ? `pda-${programId.toBase58()}-${osecInfo?.signer}` : null,
+        osecInfo ? `pda-${programId.toBase58()}-${osecInfo.signer}` : null,
         async () => {
-            if (!osecInfo || !accountAnchorProgram) {
+            if (!osecInfo) {
                 return null;
             }
 
@@ -160,11 +162,68 @@ function useEnrichedOsecInfo({
                 new PublicKey(VERIFY_PROGRAM_ID)
             );
 
-            const pdaAccountInfo = await (accountAnchorProgram.account as any).buildParams.fetch(pda);
-            if (!pdaAccountInfo) {
+            // Try Anchor program first if available
+            if (accountAnchorProgram) {
+                try {
+                    const pdaAccountInfo = await (accountAnchorProgram.account as any).buildParams.fetch(pda);
+                    if (pdaAccountInfo) {
+                        return pdaAccountInfo;
+                    }
+                } catch (e) {
+                    // Fall through to raw fetch
+                }
+            }
+
+            // Fallback: Fetch raw account data and deserialize manually
+            const accountInfo = await connection.getAccountInfo(pda);
+            if (!accountInfo || !accountInfo.data) {
                 return null;
             }
-            return pdaAccountInfo;
+
+            // Deserialize BuildParams manually (Anchor account layout)
+            // Layout: discriminator (8) + program_id (32) + verifier (32) + git_url (4+len) + commit (4+len) + args (4+vec) + uploaded_at (8)
+            const data = accountInfo.data;
+            let offset = 8; // Skip Anchor discriminator
+
+            const programIdBytes = data.slice(offset, offset + 32);
+            offset += 32;
+            const verifierBytes = data.slice(offset, offset + 32);
+            offset += 32;
+
+            // Read git_url (string with 4-byte length prefix)
+            const gitUrlLen = data.readUInt32LE(offset);
+            offset += 4;
+            const gitUrl = data.slice(offset, offset + gitUrlLen).toString('utf8');
+            offset += gitUrlLen;
+
+            // Read commit (string with 4-byte length prefix)
+            const commitLen = data.readUInt32LE(offset);
+            offset += 4;
+            const commit = data.slice(offset, offset + commitLen).toString('utf8');
+            offset += commitLen;
+
+            // Read args (vector with 4-byte length prefix)
+            const argsLen = data.readUInt32LE(offset);
+            offset += 4;
+            const args: string[] = [];
+            for (let i = 0; i < argsLen; i++) {
+                const argLen = data.readUInt32LE(offset);
+                offset += 4;
+                args.push(data.slice(offset, offset + argLen).toString('utf8'));
+                offset += argLen;
+            }
+
+            // Read uploaded_at (i64 = 8 bytes)
+            const uploadedAt = data.readBigUInt64LE(offset);
+
+            return {
+                args,
+                commit,
+                gitUrl,
+                programId: new PublicKey(programIdBytes),
+                uploadedAt: { toNumber: () => Number(uploadedAt) },
+                verifier: new PublicKey(verifierBytes),
+            };
         },
         { suspense: options?.suspense }
     );
@@ -205,7 +264,7 @@ function useEnrichedOsecInfo({
 }
 
 function coalesceCommandFromPda(programId: PublicKey, pdaData: any) {
-    let verify_command = `solana-verify verify-from-repo -um --program-id ${programId.toBase58()} ${pdaData.gitUrl}`;
+    let verify_command = `x1-verify upload --program-id ${programId.toBase58()} --git-url ${pdaData.gitUrl}`;
 
     if (pdaData.commit) {
         verify_command += ` --commit-hash ${pdaData.commit}`;
@@ -232,6 +291,7 @@ export function hashProgramData(programData: ProgramDataAccountInfo): string {
         truncatedBytes++;
     }
     // Hash the binary
-    const c = Buffer.from(buffer.slice(0, buffer.length - truncatedBytes));
-    return Buffer.from(sha256(c)).toString('hex');
+    const c = new Uint8Array(buffer.subarray(0, buffer.length - truncatedBytes));
+    const hashBytes = sha256(c);
+    return Buffer.from(hashBytes).toString('hex');
 }
