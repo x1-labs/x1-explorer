@@ -3,6 +3,7 @@
 import { useCluster } from '@providers/cluster';
 import { VersionedMessage } from '@solana/web3.js';
 import { Cluster } from '@utils/cluster';
+import { getDisplayDomain } from '@utils/punycode';
 import bs58 from 'bs58';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useId } from 'react';
@@ -24,8 +25,24 @@ interface SearchOptions {
     }[];
 }
 
-const hasDomainSyntax = (value: string) => {
-    return value.length > 3 && value.split('.').length === 2;
+const isX1NSDomain = (value: string) => {
+    // Check if it's specifically an X1NS domain or partial X1NS domain
+    
+    // If no dot, check if the search looks like a domain name
+    if (!value.includes('.')) {
+        // Trigger domain search for:
+        // - 1+ characters (including emojis which can be 1 visual char but 2 JS chars)
+        // - But not long base58 addresses (30+ chars)
+        return value.length >= 1 && value.length < 30;
+    }
+    
+    const parts = value.split('.');
+    const tld = parts[parts.length - 1].toLowerCase();
+    const x1nsTlds = ['x1', 'xnt', 'xen'];
+    
+    // If TLD is complete and matches X1NS, or if user is typing a TLD
+    return x1nsTlds.includes(tld) || 
+           x1nsTlds.some(validTld => validTld.startsWith(tld) && tld.length > 0);
 };
 
 export function SearchBar() {
@@ -55,6 +72,9 @@ export function SearchBar() {
     };
 
     async function performSearch(search: string): Promise<SearchOptions[]> {
+        // Check for X1NS domains first (.x1, .xnt, .xen) - only if it's X1NS specific
+        const domainOptions = isX1NSDomain(search) ? await buildDomainOptions(search, cluster) : null;
+        
         const localOptions = buildOptions(search, cluster, clusterInfo?.epochInfo.epoch);
         let tokenOptions;
         try {
@@ -63,10 +83,15 @@ export function SearchBar() {
             console.error(`Failed to build token options for search: ${e instanceof Error ? e.message : e}`);
         }
         const tokenOptionsAppendable = tokenOptions ? [tokenOptions] : [];
-        const domainOptions =
-            hasDomainSyntax(search) && cluster === Cluster.MainnetBeta ? (await buildDomainOptions(search)) ?? [] : [];
 
-        return [...localOptions, ...tokenOptionsAppendable, ...domainOptions];
+        // Domain options appear first, then local options, then tokens
+        const allOptions = [
+            ...(domainOptions || []),
+            ...localOptions,
+            ...tokenOptionsAppendable
+        ];
+        
+        return allOptions;
     }
 
     const resetValue = '' as any;
@@ -193,34 +218,133 @@ async function buildTokenOptions(search: string, cluster: Cluster): Promise<Sear
     }
 }
 
-async function buildDomainOptions(search: string) {
-    const domainInfoResponse = await fetch(`/api/domain-info/${search}`);
-    const domainInfo = (await domainInfoResponse.json()) as FetchedDomainInfo;
+async function buildDomainOptions(search: string, _cluster: Cluster): Promise<SearchOptions[] | null> {
+    try {
+        // Check if search has domain syntax (name.tld)
+        const hasDot = search.includes('.');
+        
+        if (hasDot) {
+            // User typed full domain, resolve it
+            const domainInfoResponse = await fetch(`/api/domain-info/${search}`, {
+                cache: 'no-store'
+            });
+            const domainInfo = (await domainInfoResponse.json()) as FetchedDomainInfo;
 
-    if (domainInfo && domainInfo.owner && domainInfo.address) {
-        return [
-            {
-                label: 'Domain Owner',
-                options: [
+            if (domainInfo && domainInfo.owner && domainInfo.address) {
+                // Decode punycode to show emojis correctly
+                const displayName = getDisplayDomain(search);
+                
+                return [
                     {
-                        label: domainInfo.owner,
-                        pathname: '/address/' + domainInfo.owner,
-                        value: [search],
+                        label: 'Domain',
+                        options: [
+                            {
+                                label: displayName,
+                                pathname: '/domain/' + encodeURIComponent(search),
+                                value: [search],
+                            },
+                        ],
                     },
-                ],
-            },
-            {
-                label: 'Name Service Account',
-                options: [
                     {
-                        label: search,
-                        pathname: '/address/' + domainInfo.address,
-                        value: [search],
+                        label: 'Domain Owner',
+                        options: [
+                            {
+                                label: domainInfo.owner,
+                                pathname: '/address/' + domainInfo.owner,
+                                value: [domainInfo.owner],
+                            },
+                        ],
                     },
-                ],
-            },
-        ];
+                    {
+                        label: 'Name Service Account',
+                        options: [
+                            {
+                                label: domainInfo.address,
+                                pathname: '/address/' + domainInfo.address,
+                                value: [domainInfo.address],
+                            },
+                        ],
+                    },
+                ];
+            }
+        } else {
+            // Use exact match search (SDK-based, no indexer dependency)
+            
+            // Only search if 2+ characters (reduce load)
+            if (search.length < 2) {
+                return null;
+            }
+            const tlds = ['x1', 'xnt', 'xen'];
+            const exactMatches: any[] = [];
+            
+            for (const tld of tlds) {
+                const fullDomain = `${search}.${tld}`;
+                try {
+                    const response = await fetch(
+                        `/api/domain-info/${encodeURIComponent(fullDomain)}`,
+                        { cache: 'no-store', signal: AbortSignal.timeout(1000) }
+                    );
+                    const info = await response.json();
+                    
+                    if (info && info.owner && info.address) {
+                        exactMatches.push({
+                            address: info.address,
+                            domain: fullDomain,
+                            owner: info.owner,
+                        });
+                    }
+                } catch (e) {
+                    // Domain doesn't exist or timeout
+                }
+            }
+            
+            if (exactMatches.length > 0) {
+                // Check primary domain status for each match using X1NS API
+                await Promise.all(
+                    exactMatches.map(async (d) => {
+                        try {
+                            const primaryResp = await fetch(
+                                `https://api.x1ns.xyz/api/primary/${d.owner}`,
+                                { cache: 'no-store', signal: AbortSignal.timeout(1000) }
+                            );
+                            if (primaryResp.ok) {
+                                const primaryData = await primaryResp.json();
+                                // Check if THIS domain is the owner's primary
+                                if (primaryData && primaryData.hasPrimary && primaryData.domain === d.domain) {
+                                    d.is_owner_primary = true;
+                                }
+                            }
+                        } catch (e) {
+                            // Continue without primary check
+                        }
+                    })
+                );
+                
+                return [{
+                    label: 'Domain Owner',
+                    options: exactMatches.map(d => ({
+                        label: d.owner,
+                        pathname: '/address/' + d.owner,
+                        value: [d.owner],
+                    })),
+                }, {
+                    label: 'Domain Name',
+                    options: exactMatches.map(d => ({
+                        label: getDisplayDomain(d.domain),
+                        // If domain is owner's primary, go to owner address (shows their profile)
+                        // Otherwise, go to domain detail page
+                        pathname: d.is_owner_primary 
+                            ? '/address/' + d.owner 
+                            : '/domain/' + encodeURIComponent(d.domain),
+                        value: [d.domain],
+                    })),
+                }];
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching domain info:', error);
     }
+    return null;
 }
 
 // builds local search options

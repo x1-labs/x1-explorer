@@ -1,5 +1,5 @@
 import { NameRecordHeader, TldParser } from '@onsol/tldparser';
-import { Connection } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import pLimit from 'p-limit';
 import { useEffect, useState } from 'react';
 
@@ -30,7 +30,8 @@ export const useUserANSDomains = (userAddress: string): [DomainInfo[] | null, bo
                 const limit = pLimit(5);
                 const promises = allDomains.map(address =>
                     limit(async () => {
-                        const domainRecord = await NameRecordHeader.fromAccountAddress(connection, address);
+                        const addressPubkey = typeof address === 'string' ? new PublicKey(address) : address;
+                        const domainRecord = await NameRecordHeader.fromAccountAddress(connection, addressPubkey);
 
                         // expired or not found
                         if (!domainRecord?.owner) return;
@@ -45,13 +46,13 @@ export const useUserANSDomains = (userAddress: string): [DomainInfo[] | null, bo
 
                         const tld = await parser.getTldFromParentAccount(domainRecord?.parentName);
 
-                        const domain = await parser.reverseLookupNameAccount(address, domainParentNameAccount?.owner);
+                        const domain = await parser.reverseLookupNameAccount(addressPubkey, domainParentNameAccount?.owner);
 
                         // domain not found or might be a subdomain.
                         if (!domain) return;
 
                         userDomains.push({
-                            address,
+                            address: addressPubkey,
                             name: `${domain}${tld}`,
                         });
                     })
