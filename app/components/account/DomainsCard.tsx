@@ -58,8 +58,8 @@ export function DomainsCard({ address }: { address: string }) {
                             filters: [
                                 {
                                     memcmp: {
-                                        offset: 0, // Parent name is at offset 0-32
-                                        bytes: rootDomain.toBase58()
+                                        bytes: rootDomain.toBase58(),
+                                        offset: 0 // Parent name is at offset 0-32
                                     }
                                 }
                             ]
@@ -125,14 +125,14 @@ export function DomainsCard({ address }: { address: string }) {
                         filters: [
                             {
                                 memcmp: {
-                                    offset: 34, // NFT owner is at offset 34-66
                                     bytes: ownerPubkey.toBase58(),
+                                    offset: 34 // NFT owner is at offset 34-66
                                 },
                             },
                         ],
                     });
                     
-                    for (const { pubkey, account } of nftRecordAccounts) {
+                    for (const { account } of nftRecordAccounts) {
                         try {
                             if (account.data.length >= 66) {
                                 // Read domain address from NFT record (offset 2-34)
