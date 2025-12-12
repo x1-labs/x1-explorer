@@ -1,44 +1,62 @@
 'use client';
 
+import { useHotkeys } from '@mantine/hooks';
 import { useCluster } from '@providers/cluster';
 import { VersionedMessage } from '@solana/web3.js';
-import { Cluster } from '@utils/cluster';
+import { Cluster, clusterSlug } from '@utils/cluster';
+import { SearchElement } from '@utils/token-search';
 import bs58 from 'bs58';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useId } from 'react';
-import { Search } from 'react-feather';
-import { ActionMeta, InputActionMeta, ValueType } from 'react-select';
+import React, { MouseEventHandler, TouchEventHandler, useCallback, useId, useMemo, useRef } from 'react';
+import { Search, X } from 'react-feather';
+import { ActionMeta, components, ControlProps, InputActionMeta, SelectInstance } from 'react-select';
 import AsyncSelect from 'react-select/async';
 
+import FEATURES from '@/app/utils/feature-gate/featureGates.json';
+
 import { FetchedDomainInfo } from '../api/domain-info/[domain]/route';
+import { FeatureInfoType } from '../utils/feature-gate/types';
 import { LOADER_IDS, LoaderName, PROGRAM_INFO_BY_ID, SPECIAL_IDS, SYSVAR_IDS } from '../utils/programs';
 import { searchTokens } from '../utils/token-search';
+import { pickClusterParams } from '../utils/url';
+import { useDebouncedAsync } from '../utils/use-debounce-async';
 import { MIN_MESSAGE_LENGTH } from './inspector/RawInputCard';
 
 interface SearchOptions {
     label: string;
-    options: {
-        label: string;
-        value: string[];
-        pathname: string;
-    }[];
+    options: SearchElement[];
 }
 
 const hasDomainSyntax = (value: string) => {
     return value.length > 3 && value.split('.').length === 2;
 };
 
+const RESET_VALUE = '' as any;
+
 export function SearchBar() {
     const [search, setSearch] = React.useState('');
-    const selectRef = React.useRef<AsyncSelect<any> | null>(null);
     const router = useRouter();
     const { cluster, clusterInfo } = useCluster();
     const searchParams = useSearchParams();
-    const onChange = ({ pathname }: ValueType<any, false>, meta: ActionMeta<any>) => {
+    const selectRef = useRef<SelectInstance<SearchElement> | null>(null);
+
+    const onChange = (option: SearchElement, meta: ActionMeta<any>) => {
+        if (option === null || typeof option?.pathname !== 'string') {
+            setSearch('');
+            return;
+        }
+        const { pathname } = option;
         if (meta.action === 'select-option') {
             // Always use the pathname directly if it contains query params
             if (pathname.includes('?')) {
-                router.push(pathname);
+                const [path, currentSearchParamsString] = pathname.split('?');
+                // break pathname to preserve existing params and allow to keep same cluster
+                const nextPath = pickClusterParams(
+                    path,
+                    new URLSearchParams(currentSearchParamsString),
+                    new URLSearchParams(`cluster=${clusterSlug(cluster)}`)
+                );
+                router.push(nextPath);
             } else {
                 // Only preserve existing query params for paths without their own params
                 const nextQueryString = searchParams?.toString();
@@ -48,62 +66,103 @@ export function SearchBar() {
         }
     };
 
-    const onInputChange = (value: string, { action }: InputActionMeta) => {
+    const onInputChange = useCallback((value: string, { action }: InputActionMeta) => {
         if (action === 'input-change') {
             setSearch(value);
         }
-    };
+    }, []);
 
     async function performSearch(search: string): Promise<SearchOptions[]> {
         const localOptions = buildOptions(search, cluster, clusterInfo?.epochInfo.epoch);
-        let tokenOptions;
-        try {
-            tokenOptions = await buildTokenOptions(search, cluster);
-        } catch (e) {
-            console.error(`Failed to build token options for search: ${e instanceof Error ? e.message : e}`);
-        }
-        const tokenOptionsAppendable = tokenOptions ? [tokenOptions] : [];
-        const domainOptions =
-            hasDomainSyntax(search) && cluster === Cluster.MainnetBeta ? (await buildDomainOptions(search)) ?? [] : [];
+        const [tokenOptions, domainOptions] = await Promise.allSettled([
+            buildTokenOptions(search, cluster),
+            // buildFeatureOptions(search),
+            hasDomainSyntax(search) && cluster === Cluster.MainnetBeta ? buildDomainOptions(search) : [],
+        ]);
 
-        return [...localOptions, ...tokenOptionsAppendable, ...domainOptions];
+        const tokenOptionsAppendable = buildAppendableSearchOptions(tokenOptions, 'token');
+        // const featureOptionsAppendable = buildAppendableSearchOptions(featureOptions, 'feature gates');
+        const domainOptionsAppendable = buildAppendableSearchOptions(domainOptions, 'domain');
+
+        return [...localOptions, ...domainOptionsAppendable, ...tokenOptionsAppendable];
     }
 
-    const resetValue = '' as any;
+    const debouncedPerformSearch = useDebouncedAsync(performSearch, 500);
+
+    // Substitute control component to insert custom clear button (the built in clear button only works with selected option, which is not the case)
+    const Control = useMemo(
+        () =>
+            function ControlSubstitute({ children, ...props }: ControlProps<SearchElement, false>) {
+                const clearHandler = useCallback(
+                    (e: React.MouseEvent<HTMLDivElement, globalThis.MouseEvent> | React.TouchEvent<HTMLDivElement>) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSearch('');
+                        selectRef.current?.clearValue();
+                        selectRef.current?.blur();
+                    },
+                    []
+                );
+                const hasValue = Boolean(selectRef.current?.inputRef?.value);
+
+                return (
+                    <components.Control {...props}>
+                        <Search className="me-3" size={15} />
+                        {children}
+                        {hasValue ? (
+                            <ClearIndicator onClick={clearHandler} onTouchStart={clearHandler} />
+                        ) : (
+                            <KeyIndicator />
+                        )}
+                    </components.Control>
+                );
+            },
+        [setSearch, selectRef]
+    );
+
+    const onHotKeyPressHandler = useCallback(() => {
+        selectRef.current?.focus();
+    }, []);
+
+    // Focus search on hotkey press
+    useHotkeys(
+        [
+            ['/', onHotKeyPressHandler],
+            ['mod+k', onHotKeyPressHandler],
+        ],
+        ['INPUT', 'TEXTAREA']
+    );
+
+    const noOptionsMessageHandler = useCallback(() => 'No Results', []);
+    const loadingMessageHandler = useCallback(() => 'loading...', []);
+    const id = useId();
+
     return (
-        <div className="container my-4">
-            <div className="row align-items-center">
-                <div className="col">
-                    <AsyncSelect
-                        cacheOptions
-                        defaultOptions
-                        loadOptions={performSearch}
-                        autoFocus
-                        inputId={useId()}
-                        ref={selectRef}
-                        noOptionsMessage={() => 'No Results'}
-                        loadingMessage={() => 'loading...'}
-                        placeholder="Search for blocks, accounts, transactions, programs, and tokens"
-                        value={resetValue}
-                        inputValue={search}
-                        blurInputOnSelect
-                        onMenuClose={() => selectRef.current?.blur()}
-                        onChange={onChange}
-                        styles={{
-                            input: style => ({ ...style, width: '100%' }),
-                            /* work around for https://github.com/JedWatson/react-select/issues/3857 */
-                            placeholder: style => ({ ...style, pointerEvents: 'none' }),
-                        }}
-                        onInputChange={onInputChange}
-                        components={{ DropdownIndicator }}
-                        classNamePrefix="search-bar"
-                        /* workaround for https://github.com/JedWatson/react-select/issues/5714 */
-                        onFocus={() => {
-                            selectRef.current?.handleInputChange(search, { action: 'set-value' });
-                        }}
-                    />
-                </div>
-            </div>
+        <div className="w-100">
+            <AsyncSelect
+                cacheOptions
+                defaultOptions
+                loadOptions={debouncedPerformSearch}
+                autoFocus
+                ref={selectRef}
+                inputId={id}
+                noOptionsMessage={noOptionsMessageHandler}
+                loadingMessage={loadingMessageHandler}
+                placeholder="Search for blocks, accounts, transactions, programs, and tokens"
+                value={RESET_VALUE}
+                inputValue={search}
+                blurInputOnSelect
+                onChange={onChange}
+                styles={{
+                    control: style => ({ ...style, pointerEvents: 'all' }),
+                    input: style => ({ ...style, width: '100%' }),
+                    /* work around for https://github.com/JedWatson/react-select/issues/3857 */
+                    placeholder: style => ({ ...style, pointerEvents: 'none' }),
+                }}
+                onInputChange={onInputChange}
+                components={{ Control, DropdownIndicator: undefined, IndicatorSeparator: undefined }}
+                classNamePrefix="search-bar"
+            />
         </div>
     );
 }
@@ -223,6 +282,26 @@ async function buildDomainOptions(search: string) {
     }
 }
 
+function buildFeatureGateOptions(search: string) {
+    let features: FeatureInfoType[] = [];
+    if (search) {
+        features = (FEATURES as FeatureInfoType[]).filter(feature =>
+            feature.title.toUpperCase().includes(search.toUpperCase())
+        );
+    }
+
+    if (features.length > 0) {
+        return {
+            label: 'Feature Gates',
+            options: features.map(feature => ({
+                label: feature.title,
+                pathname: '/address/' + feature.key,
+                value: [feature.key || ''],
+            })),
+        };
+    }
+}
+
 // builds local search options
 function buildOptions(rawSearch: string, cluster: Cluster, currentEpoch?: bigint) {
     const search = rawSearch.trim();
@@ -248,6 +327,11 @@ function buildOptions(rawSearch: string, cluster: Cluster, currentEpoch?: bigint
     const specialOptions = buildSpecialOptions(search);
     if (specialOptions) {
         options.push(specialOptions);
+    }
+
+    const featureOptions = buildFeatureGateOptions(search);
+    if (featureOptions) {
+        options.push(featureOptions);
     }
 
     if (!isNaN(Number(search))) {
@@ -395,10 +479,38 @@ function isValidBase64(str: string): boolean {
     }
 }
 
-function DropdownIndicator() {
+function KeyIndicator() {
+    return <div className="key-indicator">/</div>;
+}
+
+function ClearIndicator({
+    onClick,
+    onTouchStart,
+}: {
+    onClick: MouseEventHandler<HTMLDivElement>;
+    onTouchStart: TouchEventHandler<HTMLDivElement>;
+}) {
     return (
-        <div className="search-indicator">
-            <Search className="me-2" size={15} />
+        <div className="clear-indicator" onClick={onClick} onTouchStart={onTouchStart}>
+            <X size={16} />
         </div>
     );
 }
+
+function buildAppendableSearchOptions(
+    searchOptions: PromiseSettledResult<SearchOptions | SearchOptions[] | undefined> | undefined,
+    name: string
+): SearchOptions[] {
+    if (!searchOptions) return [];
+    if (searchOptions.status === 'rejected') {
+        console.error(`Failed to build ${name} options for search: ${searchOptions.reason}`);
+        return [];
+    }
+    return searchOptions.value
+        ? Array.isArray(searchOptions.value)
+            ? searchOptions.value
+            : [searchOptions.value]
+        : [];
+}
+
+export default SearchBar;

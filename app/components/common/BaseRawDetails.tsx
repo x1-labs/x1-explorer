@@ -4,7 +4,16 @@ import React from 'react';
 
 import { HexData } from './HexData';
 
+/**
+ *  Component that displays accounts from any Instruction.
+ *
+ *  VersionedMessage is optional as it will be present at inspector page only.
+ */
 export function BaseRawDetails({ ix }: { ix: TransactionInstruction }) {
+    return <BaseTransactionInstructionRawDetails ix={ix} />;
+}
+
+function BaseTransactionInstructionRawDetails({ ix }: { ix: TransactionInstruction }) {
     return (
         <>
             {ix.keys.map(({ pubkey, isSigner, isWritable }, keyIndex) => (

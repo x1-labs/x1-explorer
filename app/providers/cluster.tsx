@@ -1,10 +1,10 @@
 'use client';
 
-import { Cluster, clusterName, clusterSlug, ClusterStatus, clusterUrl, DEFAULT_CLUSTER } from '@utils/cluster';
+import { createSolanaRpc } from '@solana/kit';
+import { Cluster, clusterName, ClusterStatus, clusterUrl, DEFAULT_CLUSTER } from '@utils/cluster';
 import { localStorageIsAvailable } from '@utils/local-storage';
 import { ReadonlyURLSearchParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
-import { createSolanaRpc } from 'web3js-experimental';
 
 import { EpochSchedule } from '../utils/epoch-schedule';
 
@@ -18,7 +18,7 @@ interface EpochInfo {
     slotsInEpoch: bigint;
 }
 
-interface ClusterInfo {
+export interface ClusterInfo {
     firstAvailableBlock: bigint;
     epochSchedule: EpochSchedule;
     epochInfo: EpochInfo;
@@ -59,6 +59,8 @@ function parseQuery(searchParams: ReadonlyURLSearchParams | null): Cluster {
             return Cluster.Devnet;
         case 'testnet':
             return Cluster.Testnet;
+        case 'simd296':
+            return Cluster.Simd296;
         case 'mainnet-beta':
         default:
             return Cluster.MainnetBeta;
@@ -88,6 +90,19 @@ const ModalContext = createContext<[boolean, SetShowModal] | undefined>(undefine
 const StateContext = createContext<State | undefined>(undefined);
 const DispatchContext = createContext<Dispatch | undefined>(undefined);
 
+const WHITELISTED_RPCS = [
+    // Used for solana.com live code example
+    'engine.mirror.ad',
+];
+
+function isWhitelistedRpc(url: string) {
+    try {
+        return WHITELISTED_RPCS.includes(new URL(url).hostname);
+    } catch (e) {
+        return false;
+    }
+}
+
 type ClusterProviderProps = { children: React.ReactNode };
 export function ClusterProvider({ children }: ClusterProviderProps) {
     const [state, dispatch] = useReducer(clusterReducer, {
@@ -97,8 +112,11 @@ export function ClusterProvider({ children }: ClusterProviderProps) {
     });
     const modalState = useState(false);
     const searchParams = useSearchParams();
-    const cluster = parseUrl(searchParams);
-    const enableCustomUrl = localStorageIsAvailable() && localStorage.getItem('enableCustomUrl') !== null;
+    const cluster = parseQuery(searchParams);
+    const enableCustomUrl =
+        cluster === Cluster.Custom ||
+        (localStorageIsAvailable() && localStorage.getItem('enableCustomUrl') !== null) ||
+        isWhitelistedRpc(state.customUrl);
     const customUrl = (enableCustomUrl && searchParams?.get('customUrl')) || state.customUrl;
     const pathname = usePathname();
     const router = useRouter();

@@ -1,9 +1,24 @@
-import { default as fetch, Headers } from 'node-fetch';
+import { default as fetch, Headers, Response as NodeFetchResponse } from 'node-fetch';
 
-import { errors, matchAbortError, matchMaxSizeError, matchTimeoutError, StatusError, unsupportedMediaError } from './errors';
-import { processBinary, processJson } from './processors';
+import Logger from '@/app/utils/logger';
+
+import {
+    errors,
+    matchAbortError,
+    matchMaxSizeError,
+    matchTimeoutError,
+    StatusError,
+    unsupportedMediaError,
+} from './errors';
+import { processBinary, processJson, processTextAsJson } from './processors';
 
 export { StatusError };
+
+// Content-type matchers
+export const matchJson = (header?: string | null) => header?.includes('application/json');
+export const matchTextPlain = (header?: string | null) => header?.includes('text/plain');
+export const matchImage = (header?: string | null) => header?.includes('image/');
+export const matchJsonContent = (header?: string | null) => matchJson(header) || matchTextPlain(header);
 
 /**
  *  use this to handle errors that are thrown by fetch.
@@ -14,7 +29,7 @@ function handleRequestBasedErrors(error: Error | undefined) {
         return errors[504];
     } else if (matchMaxSizeError(error)) {
         return errors[413];
-    }else if (matchAbortError(error)) {
+    } else if (matchAbortError(error)) {
         return errors[504];
     } else {
         return errors[500];
@@ -22,12 +37,12 @@ function handleRequestBasedErrors(error: Error | undefined) {
 }
 
 async function requestResource(
-    uri: string, 
-    headers: Headers, 
-    timeout: number, 
+    uri: string,
+    headers: Headers,
+    timeout: number,
     size: number
-): Promise<[Error, void] | [void, fetch.Response]> {
-    let response: fetch.Response | undefined;
+): Promise<[Error, void] | [void, NodeFetchResponse]> {
+    let response: NodeFetchResponse | undefined;
     let error;
     try {
         response = await fetch(uri, {
@@ -41,11 +56,8 @@ async function requestResource(
         if (e instanceof Error) {
             error = e;
         } else {
-            // handle any other error as general one and allow to see it at console
-            // might be a good one to track with a service like Sentry
-            console.debug(e);
-            error = new Error("Cannot fetch resource");
-
+            Logger.debug('Debug:', e);
+            error = new Error('Cannot fetch resource');
         }
     }
 
@@ -57,12 +69,11 @@ export async function fetchResource(
     headers: Headers,
     timeout: number,
     size: number
-): Promise<Awaited<|
-    ReturnType<typeof processBinary> | 
-    ReturnType<typeof processJson>
->> {
+): Promise<
+    Awaited<ReturnType<typeof processBinary> | ReturnType<typeof processJson> | ReturnType<typeof processTextAsJson>>
+> {
     const [error, response] = await requestResource(uri, headers, timeout, size);
-    
+
     // check for response to infer proper type for it
     // and throw proper error
     if (error || !response) {
@@ -70,11 +81,13 @@ export async function fetchResource(
     }
 
     // guess how to process resource by content-type
-    const isJson = response.headers.get('content-type')?.includes('application/json');
-
-    const isImage = response.headers.get('content-type')?.includes('image/');
+    const contentTypeHeader = response.headers.get('content-type');
+    const isJson = matchJson(contentTypeHeader);
+    const isPlainText = matchTextPlain(contentTypeHeader);
+    const isImage = matchImage(contentTypeHeader);
 
     if (isJson) return processJson(response);
+    if (isPlainText) return processTextAsJson(response);
 
     if (isImage) return processBinary(response);
 

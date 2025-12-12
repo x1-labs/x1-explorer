@@ -9,8 +9,9 @@ import { useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ExternalLink as ExternalLinkIcon } from 'react-feather';
 
-import { useCluster } from '@/app/providers/cluster';
-import { Cluster } from '@/app/utils/cluster';
+import { ClusterInfo, useCluster } from '@/app/providers/cluster';
+import { Cluster, clusterName } from '@/app/utils/cluster';
+import { getEpochForSlot } from '@/app/utils/epoch-schedule';
 import { FeatureInfoType } from '@/app/utils/feature-gate/types';
 import { getFeatureInfo } from '@/app/utils/feature-gate/utils';
 
@@ -54,10 +55,9 @@ const BaseFeatureCard = ({
     address,
     featureInfo,
 }: ReturnType<typeof parseFeatureAccount> & { featureInfo?: FeatureInfoType }) => {
-    const { cluster } = useCluster();
+    const { cluster, clusterInfo } = useCluster();
 
     let activatedAtSlot;
-    let clusterActivation;
     let simdLink;
     if (activatedAt) {
         activatedAtSlot = (
@@ -70,25 +70,26 @@ const BaseFeatureCard = ({
         );
     }
     if (featureInfo) {
-        clusterActivation = (
-            <tr>
-                <td className="text-nowrap">Cluster Activation</td>
-                <td className="text-lg-end">
-                    <ClusterActivationEpochAtCluster featureInfo={featureInfo} cluster={cluster} />
-                </td>
-            </tr>
-        );
         simdLink = (
             <tr>
-                <td>SIMD</td>
+                <td>SIMDs</td>
                 <td className="text-lg-end">
-                    {featureInfo.simd && featureInfo.simd_link ? (
-                        <a href={featureInfo.simd_link} target="_blank" rel="noopener noreferrer" className="">
-                            SIMD {featureInfo.simd} <ExternalLinkIcon className="align-text-top" size={13} />
-                        </a>
-                    ) : (
-                        <code>No link</code>
-                    )}
+                    {featureInfo.simds.map((simd, index) => (
+                        <div key={index}>
+                            {simd && featureInfo.simd_link[index] ? (
+                                <a
+                                    href={featureInfo.simd_link[index]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className=""
+                                >
+                                    SIMD {simd} <ExternalLinkIcon className="align-text-top" size={13} />
+                                </a>
+                            ) : (
+                                <code>No link</code>
+                            )}
+                        </div>
+                    ))}
                 </td>
             </tr>
         );
@@ -113,17 +114,26 @@ const BaseFeatureCard = ({
                 <tr>
                     <td className="text-nowrap">Activated?</td>
                     <td className="text-lg-end">
-                        {featureInfo ? (
-                            <FeatureActivatedAtCluster featureInfo={featureInfo} cluster={cluster} />
+                        {activatedAt !== null ? (
+                            <span className="badge bg-success">Active on {clusterName(cluster)}</span>
                         ) : (
-                            <code>{activatedAt === null ? 'No' : 'Yes'}</code>
+                            <code>Not yet activated on {clusterName(cluster)}</code>
                         )}
                     </td>
                 </tr>
 
                 {activatedAtSlot}
 
-                {clusterActivation}
+                <tr>
+                    <td className="text-nowrap">Cluster Activation</td>
+                    <td className="text-lg-end">
+                        <ClusterActivationEpochAtCluster
+                            cluster={cluster}
+                            clusterInfo={clusterInfo}
+                            activatedAt={activatedAt}
+                        />
+                    </td>
+                </tr>
 
                 {featureInfo?.description && (
                     <tr>
@@ -138,60 +148,24 @@ const BaseFeatureCard = ({
     );
 };
 
-function ClusterActivationEpochAtCluster({ featureInfo, cluster }: { featureInfo: FeatureInfoType; cluster: Cluster }) {
+function ClusterActivationEpochAtCluster({
+    cluster,
+    clusterInfo,
+    activatedAt,
+}: {
+    cluster: Cluster;
+    clusterInfo: ClusterInfo | undefined;
+    activatedAt: number | null;
+}) {
     if (cluster === Cluster.Custom) return null;
 
-    const { mainnetActivationEpoch, devnetActivationEpoch, testnetActivationEpoch } = featureInfo;
-
-    // Show empty state unless there is any info about Activation
-    if (!mainnetActivationEpoch && !devnetActivationEpoch && !testnetActivationEpoch) return <code>No Epoch</code>;
-
-    return (
-        <>
-            {mainnetActivationEpoch && cluster === Cluster.MainnetBeta && (
-                <div>
-                    <Link href={`/epoch/${featureInfo.mainnetActivationEpoch}?cluster=mainnet`} className="epoch-link">
-                        Mainnet Epoch {featureInfo.mainnetActivationEpoch}
-                    </Link>
-                </div>
-            )}
-            {devnetActivationEpoch && cluster === Cluster.Devnet && (
-                <div>
-                    <Link href={`/epoch/${featureInfo.devnetActivationEpoch}?cluster=devnet`} className="epoch-link">
-                        Devnet Epoch {featureInfo.devnetActivationEpoch}
-                    </Link>
-                </div>
-            )}
-            {testnetActivationEpoch && cluster === Cluster.Testnet && (
-                <div>
-                    <Link href={`/epoch/${featureInfo.testnetActivationEpoch}?cluster=testnet`} className="epoch-link">
-                        Testnet Epoch {featureInfo.testnetActivationEpoch}
-                    </Link>
-                </div>
-            )}
-        </>
-    );
-}
-
-function FeatureActivatedAtCluster({ featureInfo, cluster }: { featureInfo: FeatureInfoType; cluster: Cluster }) {
-    if (cluster === Cluster.Custom) return null;
-
-    const { mainnetActivationEpoch, devnetActivationEpoch, testnetActivationEpoch } = featureInfo;
-
-    // Show empty state unless there is any info about Activation
-    if (!mainnetActivationEpoch && !devnetActivationEpoch && !testnetActivationEpoch) return <code>Not activated</code>;
-
-    return (
-        <>
-            {cluster === Cluster.MainnetBeta && mainnetActivationEpoch && (
-                <span className="badge bg-success">Active on Mainnet</span>
-            )}
-            {cluster === Cluster.Devnet && devnetActivationEpoch && (
-                <span className="badge bg-success">Active on Devnet</span>
-            )}
-            {cluster === Cluster.Testnet && testnetActivationEpoch && (
-                <span className="badge bg-success">Active on Testnet</span>
-            )}
-        </>
-    );
+    if (activatedAt !== null && clusterInfo?.epochSchedule) {
+        const epoch = getEpochForSlot(clusterInfo?.epochSchedule, BigInt(activatedAt));
+        return (
+            <Link href={`/epoch/${epoch}?cluster=${cluster}`} className="epoch-link">
+                {clusterName(cluster)} Epoch {epoch.toString()}
+            </Link>
+        );
+    }
+    return <code>No Activation Epoch</code>;
 }

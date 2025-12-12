@@ -15,7 +15,8 @@ import Link from 'next/link';
 import { notFound, useSelectedLayoutSegment } from 'next/navigation';
 import React, { PropsWithChildren } from 'react';
 
-import { getEpochForSlot } from '@/app/utils/epoch-schedule';
+import { estimateRequestedComputeUnits } from '@/app/utils/compute-units-schedule';
+import { getEpochForSlot, getMaxComputeUnitsInBlock } from '@/app/utils/epoch-schedule';
 
 type Props = PropsWithChildren<{ params: { slot: string } }>;
 
@@ -26,7 +27,7 @@ function BlockLayoutInner({ children, params: { slot } }: Props) {
     }
     const confirmedBlock = useBlock(slotNumber);
     const fetchBlock = useFetchBlock();
-    const { clusterInfo, status } = useCluster();
+    const { clusterInfo, status, cluster } = useCluster();
     const refresh = () => fetchBlock(slotNumber);
 
     // Fetch block on load
@@ -43,9 +44,23 @@ function BlockLayoutInner({ children, params: { slot } }: Props) {
         content = <ErrorCard retry={refresh} text={`Block ${slotNumber} was not found`} />;
     } else {
         const { block, blockLeader, childSlot, childLeader, parentLeader } = confirmedBlock.data;
+        const epoch = clusterInfo ? getEpochForSlot(clusterInfo.epochSchedule, BigInt(slotNumber)) : undefined;
+
+        let totalCUs = 0;
+        let totalRequestedCUs = 0;
+        let totalCostUnits = 0;
+        for (const tx of block.transactions) {
+            const requestedCUs = estimateRequestedComputeUnits(tx, epoch, cluster);
+            const cus = tx.meta?.computeUnitsConsumed ?? 0;
+            const costUnits = tx.meta?.costUnits ?? 0;
+            totalRequestedCUs += requestedCUs;
+            totalCUs += cus;
+            totalCostUnits += costUnits;
+        }
+
         const showSuccessfulCount = block.transactions.every(tx => tx.meta !== null);
         const successfulTxs = block.transactions.filter(tx => tx.meta?.err === null);
-        const epoch = clusterInfo ? getEpochForSlot(clusterInfo.epochSchedule, BigInt(slotNumber)) : undefined;
+        const maxComputeUnits = getMaxComputeUnitsInBlock({ cluster, epoch });
 
         content = (
             <>
@@ -157,6 +172,30 @@ function BlockLayoutInner({ children, params: { slot } }: Props) {
                                 </td>
                             </tr>
                         )}
+                        <tr>
+                            <td className="w-100">Total Compute Units Consumed</td>
+                            <td className="text-lg-end font-monospace">
+                                <span>{totalCUs.toLocaleString()}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="w-100">Transaction Cost Utilization</td>
+                            <td className="text-lg-end font-monospace">
+                                <span>
+                                    {totalCostUnits.toLocaleString()} / {maxComputeUnits.toLocaleString()} (
+                                    {Math.round((totalCostUnits / maxComputeUnits) * 100)}%)
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="w-100">Reserved Compute Units</td>
+                            <td className="text-lg-end font-monospace">
+                                <span>
+                                    {totalRequestedCUs.toLocaleString()} / {maxComputeUnits.toLocaleString()} (
+                                    {Math.round((totalRequestedCUs / maxComputeUnits) * 100)}%)
+                                </span>
+                            </td>
+                        </tr>
                     </TableCardBody>
                 </div>
                 <MoreSection slot={slotNumber}>{children}</MoreSection>

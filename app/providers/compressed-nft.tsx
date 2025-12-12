@@ -1,10 +1,13 @@
 import useSWRImmutable from 'swr/immutable';
 
-export function useMetadataJsonLink(url: string, options?: { suspense?: boolean }) {
+export function useMetadataJsonLink(url: string | null, options?: { suspense?: boolean }) {
     const { data, error } = useSWRImmutable(
         url,
-        async (url: string) => {
-            return fetch(url).then(response => response.json());
+        async () => {
+            if (!url) return null;
+            const response = await fetch(url);
+            const json = await response.json();
+            return json;
         },
         { suspense: options?.suspense }
     );
@@ -143,13 +146,11 @@ export type CompressedNft = {
         primary_sale_happened: boolean;
         locked: boolean;
     };
-    creators: [
-        {
-            address: string;
-            share: number;
-            verified: boolean;
-        }
-    ];
+    creators: {
+        address: string;
+        share: number;
+        verified: boolean;
+    }[];
     ownership: {
         frozen: boolean;
         delegated: boolean;

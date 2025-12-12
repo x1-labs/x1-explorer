@@ -14,6 +14,7 @@ const ExtensionType = enums([
     'nonTransferable',
     'interestBearingConfig',
     'cpiGuard',
+    'pausableAccount',
     'permanentDelegate',
     'nonTransferableAccount',
     'confidentialTransferFeeConfig',
@@ -26,6 +27,9 @@ const ExtensionType = enums([
     'groupMemberPointer',
     'tokenGroup',
     'tokenGroupMember',
+    'scaledUiAmountConfig',
+    'pausableAccount',
+    'pausableConfig',
     'unparseableExtension',
 ]);
 
@@ -158,4 +162,16 @@ export const TokenGroupMember = type({
     group: PublicKeyFromString,
     memberNumber: number(),
     mint: PublicKeyFromString,
+});
+
+export const ScaledUiAmountConfig = type({
+    authority: nullable(PublicKeyFromString),
+    multiplier: string(),
+    newMultiplier: string(),
+    newMultiplierEffectiveTimestamp: number(),
+});
+
+export const PausableConfig = type({
+    authority: nullable(PublicKeyFromString),
+    paused: boolean(),
 });

@@ -1,8 +1,8 @@
+import { useAnchorProgram } from '@entities/idl';
 import { PublicKey } from '@solana/web3.js';
 import { Suspense } from 'react';
 
 import { UpgradeableLoaderAccountData } from '@/app/providers/accounts';
-import { useAnchorProgram } from '@/app/providers/anchor';
 import { useCluster } from '@/app/providers/cluster';
 import {
     SQUADS_V3_ADDRESS,
@@ -26,7 +26,11 @@ export function ProgramMultisigCard({ data }: { data: UpgradeableLoaderAccountDa
 function ProgramMultisigCardInner({ programAuthority }: { programAuthority: PublicKey | null | undefined }) {
     const { cluster, url } = useCluster();
     const { data: squadMapInfo } = useSquadsMultisigLookup(programAuthority, cluster);
-    const anchorProgram = useAnchorProgram(squadMapInfo?.version === 'v3' ? SQUADS_V3_ADDRESS : SQUADS_V4_ADDRESS, url);
+    const anchorProgram = useAnchorProgram(
+        squadMapInfo?.version === 'v3' ? SQUADS_V3_ADDRESS : SQUADS_V4_ADDRESS,
+        url,
+        cluster
+    );
     const { data: squadInfo } = useSquadsMultisig(
         anchorProgram.program,
         squadMapInfo?.multisig,

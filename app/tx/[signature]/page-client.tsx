@@ -13,6 +13,7 @@ import { SignatureContext } from '@components/instruction/SignatureContext';
 import { InstructionsSection } from '@components/transaction/InstructionsSection';
 import { ProgramLogSection } from '@components/transaction/ProgramLogSection';
 import { TokenBalancesCard } from '@components/transaction/TokenBalancesCard';
+import { CUProfilingSection } from '@features/cu-profiling';
 import { FetchStatus } from '@providers/cache';
 import { useCluster } from '@providers/cluster';
 import {
@@ -29,12 +30,15 @@ import { SignatureProps } from '@utils/index';
 import { getTransactionInstructionError } from '@utils/program-err';
 import { intoTransactionInstruction } from '@utils/tx';
 import { useClusterPath } from '@utils/url';
+import useTabVisibility from '@utils/use-tab-visibility';
 import { BigNumber } from 'bignumber.js';
 import bs58 from 'bs58';
 import Link from 'next/link';
 import React, { Suspense, useEffect, useState } from 'react';
 import { RefreshCw, Settings } from 'react-feather';
-import useTabVisibility from 'use-tab-visibility';
+
+import { estimateRequestedComputeUnitsForParsedTransaction } from '@/app/utils/compute-units-schedule';
+import { getEpochForSlot } from '@/app/utils/epoch-schedule';
 
 const AUTO_REFRESH_INTERVAL = 2000;
 const ZERO_CONFIRMATION_BAILOUT = 5;
@@ -91,6 +95,7 @@ export default function TransactionDetailsPageClient({ params: { signature: raw 
     }
 
     const status = useTransactionStatus(signature);
+    const clusterStatus = useCluster().status;
     const [zeroConfirmationRetries, setZeroConfirmationRetries] = useState(0);
     const { visible: isTabVisible } = useTabVisibility();
 
@@ -125,6 +130,8 @@ export default function TransactionDetailsPageClient({ params: { signature: raw 
             </div>
             {signature === undefined ? (
                 <ErrorCard text={`Signature "${raw}" is not valid`} />
+            ) : clusterStatus === ClusterStatus.Failure ? (
+                <ErrorCard text="RPC is not responding. Please change your RPC url and try again." />
             ) : (
                 <SignatureContext.Provider value={signature}>
                     <StatusCard signature={signature} autoRefresh={autoRefresh} />
@@ -184,8 +191,13 @@ function StatusCard({ signature, autoRefresh }: SignatureProps & AutoRefreshProp
     const transactionWithMeta = details?.data?.transactionWithMeta;
     const fee = transactionWithMeta?.meta?.fee;
     const computeUnitsConsumed = transactionWithMeta?.meta?.computeUnitsConsumed;
+    const costUnits = transactionWithMeta?.meta?.costUnits;
     const transaction = transactionWithMeta?.transaction;
     const blockhash = transaction?.message.recentBlockhash;
+    const epoch = clusterInfo ? getEpochForSlot(clusterInfo.epochSchedule, BigInt(info.slot)) : undefined;
+    const reservedCUs = transactionWithMeta?.transaction
+        ? estimateRequestedComputeUnitsForParsedTransaction(transactionWithMeta.transaction, epoch, cluster)
+        : undefined;
     const version = transactionWithMeta?.version;
     const isNonce = (() => {
         if (!transaction || transaction.message.instructions.length < 1) {
@@ -335,6 +347,20 @@ function StatusCard({ signature, autoRefresh }: SignatureProps & AutoRefreshProp
                     </tr>
                 )}
 
+                {costUnits !== undefined && (
+                    <tr>
+                        <td>Transaction cost</td>
+                        <td className="text-lg-end">{costUnits.toLocaleString('en-US')}</td>
+                    </tr>
+                )}
+
+                {reservedCUs !== undefined && (
+                    <tr>
+                        <td>Reserved CUs</td>
+                        <td className="text-lg-end">{reservedCUs.toLocaleString('en-US')}</td>
+                    </tr>
+                )}
+
                 {version !== undefined && (
                     <tr>
                         <td>Transaction Version</td>
@@ -375,6 +401,7 @@ function DetailsSection({ signature }: SignatureProps) {
 
     return (
         <>
+            <CUProfilingSection signature={signature} />
             <AccountsCard signature={signature} />
             <TokenBalancesCard signature={signature} />
             <InstructionsSection signature={signature} />

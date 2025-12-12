@@ -1,14 +1,14 @@
 import { PublicKey } from '@solana/web3.js';
 import { render, screen } from '@testing-library/react';
-import * as lighthouseSdk from 'lighthouse-sdk';
+import { vi } from 'vitest';
 
 import { LighthouseDetailsCard } from '../LighthouseDetailsCard';
 
-jest.mock('react-feather', () => ({
+vi.mock('react-feather', () => ({
     CornerDownRight: () => <div data-testid="corner-down-right" />,
 }));
 
-jest.mock('../../InstructionCard', () => ({
+vi.mock('../../InstructionCard', () => ({
     InstructionCard: ({ children, title }: { children: React.ReactNode; title: string }) => (
         <div data-testid="instruction-card" className="card">
             <div className="card-header">
@@ -23,11 +23,19 @@ jest.mock('../../InstructionCard', () => ({
     ),
 }));
 
-jest.mock('../../../common/Address', () => ({
+vi.mock('../../../common/Address', () => ({
     Address: ({ pubkey }: { pubkey: PublicKey }) => <div data-testid="address">{pubkey.toBase58()}</div>,
 }));
 
-jest.mock('../../../../utils/anchor', () => ({
+vi.mock('../../../common/Copyable', () => ({
+    Copyable: ({ text, children }: { text: string; children: React.ReactNode }) => (
+        <div data-testid="copyable" data-text={text}>
+            {children}
+        </div>
+    ),
+}));
+
+vi.mock('../../../../utils/anchor', () => ({
     ExpandableRow: ({
         fieldName,
         fieldType,
@@ -51,7 +59,7 @@ jest.mock('../../../../utils/anchor', () => ({
     ),
 }));
 
-jest.mock('change-case', () => ({
+vi.mock('change-case', () => ({
     split: jest.fn(() => 'mocked-split'),
 }));
 
@@ -62,14 +70,6 @@ describe('LighthouseDetailsCard', () => {
         innerCards: undefined,
         result: { err: null },
     };
-
-    beforeEach(() => {
-        jest.spyOn(lighthouseSdk, 'identifyLighthouseInstruction');
-    });
-
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
 
     describe('Assert Instructions', () => {
         it('renders Assert Sysvar Clock instruction', () => {
@@ -428,7 +428,7 @@ describe('LighthouseDetailsCard', () => {
             expect(ixArgs1a).toHaveTextContent('fields');
             expect(ixArgs1a).toHaveTextContent('Array[1]');
 
-            const ixArgs1b = screen.getByTestId('ix-args-1-1-0');
+            const ixArgs1b = screen.getByTestId('ix-args-2-0');
             expect(ixArgs1b).toHaveTextContent('#0');
             expect(ixArgs1b).toHaveTextContent('number');
             expect(ixArgs1b).toHaveTextContent('1');

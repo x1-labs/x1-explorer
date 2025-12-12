@@ -7,25 +7,31 @@ import {
     VersionedMessage,
 } from '@solana/web3.js';
 
-type LookupsForAccountKeyIndex = { lookupTableIndex: number, lookupTableKey: PublicKey }
+type LookupsForAccountKeyIndex = { lookupTableIndex: number; lookupTableKey: PublicKey };
 
-function findLookupAddressByIndex(accountIndex: number, message: VersionedMessage, lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[]){
+function findLookupAddressByIndex(
+    accountIndex: number,
+    message: VersionedMessage,
+    lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[]
+) {
     let lookup: PublicKey;
     // dynamic means that lookups are taken based not on staticAccountKeys
-    let dynamicLookups: { isStatic: true, lookups: undefined} | { isStatic: false, lookups: LookupsForAccountKeyIndex };
+    let dynamicLookups:
+        | { isStatic: true; lookups: undefined }
+        | { isStatic: false; lookups: LookupsForAccountKeyIndex };
 
     if (accountIndex >= message.staticAccountKeys.length) {
         const lookupIndex = accountIndex - message.staticAccountKeys.length;
         lookup = lookupsForAccountKeyIndex[lookupIndex].lookupTableKey;
         dynamicLookups = {
             isStatic: false,
-            lookups: lookupsForAccountKeyIndex[lookupIndex]
+            lookups: lookupsForAccountKeyIndex[lookupIndex],
         };
     } else {
         lookup = message.staticAccountKeys[accountIndex];
         dynamicLookups = {
             isStatic: true,
-            lookups: undefined
+            lookups: undefined,
         };
     }
 
@@ -35,9 +41,9 @@ function findLookupAddressByIndex(accountIndex: number, message: VersionedMessag
 function fillAccountMetas(
     accountKeyIndexes: number[],
     message: VersionedMessage,
-    lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[],
-){
-    const accountMetas = accountKeyIndexes.map((accountIndex) => {
+    lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[]
+) {
+    const accountMetas = accountKeyIndexes.map(accountIndex => {
         const { lookup } = findLookupAddressByIndex(accountIndex, message, lookupsForAccountKeyIndex);
 
         const isSigner = accountIndex < message.header.numRequiredSignatures;
@@ -47,18 +53,23 @@ function fillAccountMetas(
             isWritable,
             pubkey: lookup,
         };
+
         return accountMeta;
     });
 
     return accountMetas;
 }
 
-export function findLookupAddress(accountIndex: number, message: VersionedMessage, lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[]){
+export function findLookupAddress(
+    accountIndex: number,
+    message: VersionedMessage,
+    lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[]
+) {
     return findLookupAddressByIndex(accountIndex, message, lookupsForAccountKeyIndex);
 }
 
-export function fillAddressTableLookupsAccounts(addressTableLookups: MessageAddressTableLookup[]){
-    const lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[]= [
+export function fillAddressTableLookupsAccounts(addressTableLookups: MessageAddressTableLookup[]) {
+    const lookupsForAccountKeyIndex: LookupsForAccountKeyIndex[] = [
         ...addressTableLookups.flatMap(lookup =>
             lookup.writableIndexes.map(index => ({
                 lookupTableIndex: index,
@@ -78,13 +89,25 @@ export function fillAddressTableLookupsAccounts(addressTableLookups: MessageAddr
 
 export function intoTransactionInstructionFromVersionedMessage(
     compiledInstruction: MessageCompiledInstruction,
-    originalMessage: VersionedMessage,
-    programId: PublicKey
+    originalMessage: VersionedMessage
 ): TransactionInstruction {
     const { accountKeyIndexes, data } = compiledInstruction;
     const { addressTableLookups } = originalMessage;
 
     const lookupAccounts = fillAddressTableLookupsAccounts(addressTableLookups);
+
+    // When we're deserializing Squads vault transactions, an "outer" programIdIndex can be found in the addressTableLookups
+    // (You never need to lookup outer programIds for normal messages)
+    let programId: PublicKey | undefined;
+    if (compiledInstruction.programIdIndex < originalMessage.staticAccountKeys.length) {
+        programId = originalMessage.staticAccountKeys.at(compiledInstruction.programIdIndex);
+    } else {
+        // This is only needed for Squads vault transactions, in normal messages, outer program IDs cannot be in addressTableLookups
+        const lookupIndex = compiledInstruction.programIdIndex - originalMessage.staticAccountKeys.length;
+        programId = addressTableLookups[lookupIndex].accountKey;
+    }
+    if (!programId) throw new Error('Program ID not found');
+
     const accountMetas = fillAccountMetas(accountKeyIndexes, originalMessage, lookupAccounts);
 
     const transactionInstruction: TransactionInstruction = new TransactionInstruction({

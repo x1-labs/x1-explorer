@@ -1,16 +1,16 @@
+import ScaledUiAmountMultiplierTooltip from '@components/account/token-extensions/ScaledUiAmountMultiplierTooltip';
 import { Address } from '@components/common/Address';
 import { Copyable } from '@components/common/Copyable';
-import { LoadingCard } from '@components/common/LoadingCard';
 import { TableCardBody } from '@components/common/TableCardBody';
 import { Account, NFTData, TokenProgramData, useFetchAccountInfo } from '@providers/accounts';
-import { TOKEN_2022_PROGRAM_ID } from '@providers/accounts/tokens';
+import { TOKEN_2022_PROGRAM_ID, useScaledUiAmountForMint } from '@providers/accounts/tokens';
 import isMetaplexNFT from '@providers/accounts/utils/isMetaplexNFT';
 import { useCluster } from '@providers/cluster';
 import { PublicKey } from '@solana/web3.js';
 import { Cluster } from '@utils/cluster';
-import { CoingeckoStatus, useCoinGecko } from '@utils/coingecko';
-import { displayTimestamp, displayTimestampWithoutDate } from '@utils/date';
-import { abbreviatedNumber, normalizeTokenAmount } from '@utils/index';
+import { displayTimestamp } from '@utils/date';
+import { normalizeTokenAmount } from '@utils/index';
+import { getCurrentTokenScaledUiAmountMultiplier } from '@utils/token-info';
 import { addressLabel } from '@utils/tx';
 import { MintAccountInfo, MultisigAccountInfo, TokenAccount, TokenAccountInfo } from '@validators/accounts/token';
 import {
@@ -26,8 +26,11 @@ import {
     MemoTransfer,
     MetadataPointer,
     MintCloseAuthority,
+    PausableConfig,
     PermanentDelegate,
+    ScaledUiAmountConfig,
     TokenExtension,
+    TokenExtensionType,
     TokenGroup,
     TokenGroupMember,
     TokenMetadata,
@@ -45,6 +48,7 @@ import useSWR from 'swr';
 
 import { FullLegacyTokenInfo, getTokenInfo, getTokenInfoSwrKey } from '@/app/utils/token-info';
 
+import { TokenExtensionsStatusRow } from './token-extensions/TokenExtensionsStatusRow';
 import { UnknownAccountCard } from './UnknownAccountCard';
 
 const getEthAddress = (link?: string) => {
@@ -122,178 +126,120 @@ function FungibleTokenMintAccountCard({
     tokenInfo?: FullLegacyTokenInfo;
 }) {
     const fetchInfo = useFetchAccountInfo();
-    const { clusterInfo } = useCluster();
-    const epoch = clusterInfo?.epochInfo.epoch;
     const refresh = () => fetchInfo(account.pubkey, 'parsed');
 
     const bridgeContractAddress = getEthAddress(tokenInfo?.extensions?.bridgeContract);
     const assetContractAddress = getEthAddress(tokenInfo?.extensions?.assetContract);
 
-    const coinInfo = useCoinGecko(tokenInfo?.extensions?.coingeckoId);
     const mintExtensions = mintInfo.extensions?.slice();
     mintExtensions?.sort(cmpExtension);
-
-    let tokenPriceInfo;
-    let tokenPriceDecimals = 2;
-    if (coinInfo?.status === CoingeckoStatus.Success) {
-        tokenPriceInfo = coinInfo.coinInfo;
-        if (tokenPriceInfo && tokenPriceInfo.price < 1) {
-            tokenPriceDecimals = 6;
-        }
-    }
+    const scaledUiAmountMultiplier = getCurrentTokenScaledUiAmountMultiplier(mintExtensions);
 
     return (
-        <>
-            {tokenInfo?.extensions?.coingeckoId && coinInfo?.status === CoingeckoStatus.Loading && (
-                <LoadingCard message="Loading token price data" />
-            )}
-            {tokenPriceInfo && tokenPriceInfo.price && (
-                <div className="row">
-                    <div className="col-12 col-lg-4 col-xl">
-                        <div className="card">
-                            <div className="card-body">
-                                <h4>
-                                    Price{' '}
-                                    {tokenPriceInfo.market_cap_rank && (
-                                        <span className="ms-2 badge bg-primary rank">
-                                            Rank #{tokenPriceInfo.market_cap_rank}
-                                        </span>
-                                    )}
-                                </h4>
-                                <h1 className="mb-0">
-                                    ${tokenPriceInfo.price.toFixed(tokenPriceDecimals)}{' '}
-                                    {tokenPriceInfo.price_change_percentage_24h > 0 && (
-                                        <small className="change-positive">
-                                            &uarr; {tokenPriceInfo.price_change_percentage_24h.toFixed(2)}%
-                                        </small>
-                                    )}
-                                    {tokenPriceInfo.price_change_percentage_24h < 0 && (
-                                        <small className="change-negative">
-                                            &darr; {tokenPriceInfo.price_change_percentage_24h.toFixed(2)}%
-                                        </small>
-                                    )}
-                                    {tokenPriceInfo.price_change_percentage_24h === 0 && <small>0%</small>}
-                                </h1>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-12 col-lg-4 col-xl">
-                        <div className="card">
-                            <div className="card-body">
-                                <h4>24 Hour Volume</h4>
-                                <h1 className="mb-0">${abbreviatedNumber(tokenPriceInfo.volume_24)}</h1>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-12 col-lg-4 col-xl">
-                        <div className="card">
-                            <div className="card-body">
-                                <h4>Market Cap</h4>
-                                <h1 className="mb-0">${abbreviatedNumber(tokenPriceInfo.market_cap)}</h1>
-                                <p className="updated-time text-muted">
-                                    Updated at {displayTimestampWithoutDate(tokenPriceInfo.last_updated.getTime())}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            <div className="card">
-                <div className="card-header">
-                    <h3 className="card-header-title mb-0 d-flex align-items-center">
-                        {tokenInfo
-                            ? 'Overview'
-                            : account.owner.toBase58() === TOKEN_2022_PROGRAM_ID.toBase58()
-                            ? 'Token-2022 Mint'
-                            : 'Token Mint'}
-                    </h3>
-                    <button className="btn btn-white btn-sm" onClick={refresh}>
-                        <RefreshCw className="align-text-top me-2" size={13} />
-                        Refresh
-                    </button>
-                </div>
-                <TableCardBody>
-                    <tr>
-                        <td>Address</td>
-                        <td className="text-lg-end">
-                            <Address pubkey={account.pubkey} alignRight raw />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>{mintInfo.mintAuthority === null ? 'Fixed Supply' : 'Current Supply'}</td>
-                        <td className="text-lg-end">
-                            {normalizeTokenAmount(mintInfo.supply, mintInfo.decimals).toLocaleString('en-US', {
+        <div className="card">
+            <div className="card-header">
+                <h3 className="card-header-title mb-0 d-flex align-items-center">
+                    {tokenInfo
+                        ? 'Overview'
+                        : account.owner.toBase58() === TOKEN_2022_PROGRAM_ID.toBase58()
+                        ? 'Token-2022 Mint'
+                        : 'Token Mint'}
+                </h3>
+                <button className="btn btn-white btn-sm" onClick={refresh}>
+                    <RefreshCw className="align-text-top me-2" size={13} />
+                    Refresh
+                </button>
+            </div>
+            <TableCardBody>
+                <tr>
+                    <td>Address</td>
+                    <td className="text-lg-end">
+                        <Address pubkey={account.pubkey} alignRight raw />
+                    </td>
+                </tr>
+                <tr>
+                    <td>{mintInfo.mintAuthority === null ? 'Fixed Supply' : 'Current Supply'}</td>
+                    <td className="text-lg-end">
+                        <span>
+                            {normalizeTokenAmount(
+                                Number(mintInfo.supply) * Number(scaledUiAmountMultiplier),
+                                mintInfo.decimals
+                            ).toLocaleString('en-US', {
                                 maximumFractionDigits: 20,
                             })}
+                        </span>
+                        <ScaledUiAmountMultiplierTooltip
+                            rawAmount={normalizeTokenAmount(Number(mintInfo.supply), mintInfo.decimals).toString()}
+                            scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                        />
+                    </td>
+                </tr>
+                {tokenInfo?.extensions?.website && (
+                    <tr>
+                        <td>Website</td>
+                        <td className="text-lg-end">
+                            <a rel="noopener noreferrer" target="_blank" href={tokenInfo.extensions.website}>
+                                {tokenInfo.extensions.website}
+                                <ExternalLink className="align-text-top ms-2" size={13} />
+                            </a>
                         </td>
                     </tr>
-                    {tokenInfo?.extensions?.website && (
-                        <tr>
-                            <td>Website</td>
-                            <td className="text-lg-end">
-                                <a rel="noopener noreferrer" target="_blank" href={tokenInfo.extensions.website}>
-                                    {tokenInfo.extensions.website}
-                                    <ExternalLink className="align-text-top ms-2" size={13} />
-                                </a>
-                            </td>
-                        </tr>
-                    )}
-                    {mintInfo.mintAuthority && (
-                        <tr>
-                            <td>Mint Authority</td>
-                            <td className="text-lg-end">
-                                <Address pubkey={mintInfo.mintAuthority} alignRight link />
-                            </td>
-                        </tr>
-                    )}
-                    {mintInfo.freezeAuthority && (
-                        <tr>
-                            <td>Freeze Authority</td>
-                            <td className="text-lg-end">
-                                <Address pubkey={mintInfo.freezeAuthority} alignRight link />
-                            </td>
-                        </tr>
-                    )}
+                )}
+                {mintInfo.mintAuthority && (
                     <tr>
-                        <td>Decimals</td>
-                        <td className="text-lg-end">{mintInfo.decimals}</td>
+                        <td>Mint Authority</td>
+                        <td className="text-lg-end">
+                            <Address pubkey={mintInfo.mintAuthority} alignRight link />
+                        </td>
                     </tr>
-                    {!mintInfo.isInitialized && (
-                        <tr>
-                            <td>Status</td>
-                            <td className="text-lg-end">Uninitialized</td>
-                        </tr>
-                    )}
-                    {tokenInfo?.extensions?.bridgeContract && bridgeContractAddress && (
-                        <tr>
-                            <td>Bridge Contract</td>
-                            <td className="text-lg-end">
-                                <Copyable text={bridgeContractAddress}>
-                                    <a href={tokenInfo.extensions.bridgeContract} target="_blank" rel="noreferrer">
-                                        {bridgeContractAddress}
-                                    </a>
-                                </Copyable>
-                            </td>
-                        </tr>
-                    )}
-                    {tokenInfo?.extensions?.assetContract && assetContractAddress && (
-                        <tr>
-                            <td>Bridged Asset Contract</td>
-                            <td className="text-lg-end">
-                                <Copyable text={assetContractAddress}>
-                                    <a href={tokenInfo.extensions.bridgeContract} target="_blank" rel="noreferrer">
-                                        {assetContractAddress}
-                                    </a>
-                                </Copyable>
-                            </td>
-                        </tr>
-                    )}
-                    {mintExtensions?.map(extension =>
-                        TokenExtensionRows(extension, epoch, mintInfo.decimals, tokenInfo?.symbol)
-                    )}
-                </TableCardBody>
-            </div>
-        </>
+                )}
+                {mintInfo.freezeAuthority && (
+                    <tr>
+                        <td>Freeze Authority</td>
+                        <td className="text-lg-end">
+                            <Address pubkey={mintInfo.freezeAuthority} alignRight link />
+                        </td>
+                    </tr>
+                )}
+                <tr>
+                    <td>Decimals</td>
+                    <td className="text-lg-end">{mintInfo.decimals}</td>
+                </tr>
+                {!mintInfo.isInitialized && (
+                    <tr>
+                        <td>Status</td>
+                        <td className="text-lg-end">Uninitialized</td>
+                    </tr>
+                )}
+                {tokenInfo?.extensions?.bridgeContract && bridgeContractAddress && (
+                    <tr>
+                        <td>Bridge Contract</td>
+                        <td className="text-lg-end">
+                            <Copyable text={bridgeContractAddress}>
+                                <a href={tokenInfo.extensions.bridgeContract} target="_blank" rel="noreferrer">
+                                    {bridgeContractAddress}
+                                </a>
+                            </Copyable>
+                        </td>
+                    </tr>
+                )}
+                {tokenInfo?.extensions?.assetContract && assetContractAddress && (
+                    <tr>
+                        <td>Bridged Asset Contract</td>
+                        <td className="text-lg-end">
+                            <Copyable text={assetContractAddress}>
+                                <a href={tokenInfo.extensions.bridgeContract} target="_blank" rel="noreferrer">
+                                    {assetContractAddress}
+                                </a>
+                            </Copyable>
+                        </td>
+                    </tr>
+                )}
+                {mintExtensions && (
+                    <TokenExtensionsStatusRow address={account.pubkey.toBase58()} extensions={mintExtensions} />
+                )}
+            </TableCardBody>
+        </div>
     );
 }
 
@@ -324,6 +270,12 @@ function NonFungibleTokenMintAccountCard({
                     <td>Address</td>
                     <td className="text-lg-end">
                         <Address pubkey={account.pubkey} alignRight raw />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Owner</td>
+                    <td className="text-lg-end">
+                        <Address pubkey={account.owner} alignRight link />
                     </td>
                 </tr>
                 {nftData.editionInfo.masterEdition?.maxSupply && (
@@ -404,10 +356,11 @@ async function fetchTokenInfo([_, address, cluster, url]: ['get-token-info', str
 
 function TokenAccountCard({ account, info }: { account: Account; info: TokenAccountInfo }) {
     const refresh = useFetchAccountInfo();
-    const { cluster, clusterInfo, url } = useCluster();
-    const epoch = clusterInfo?.epochInfo.epoch;
+    const [_, scaledUiAmountMultiplier] = useScaledUiAmountForMint(info.mint.toBase58(), info.tokenAmount.amount);
+    const { cluster, url } = useCluster();
     const label = addressLabel(account.pubkey.toBase58(), cluster);
-    const swrKey = useMemo(() => getTokenInfoSwrKey(info.mint.toString(), cluster, url), [cluster, url]);
+    const swrKey = useMemo(() => getTokenInfoSwrKey(info.mint.toString(), cluster, url), [cluster, info.mint, url]);
+
     const { data: tokenInfo } = useSWR(swrKey, fetchTokenInfo);
     const [symbol, setSymbol] = useState<string | undefined>(undefined);
     const accountExtensions = info.extensions?.slice();
@@ -428,7 +381,7 @@ function TokenAccountCard({ account, info }: { account: Account; info: TokenAcco
         } else {
             setSymbol(tokenInfo?.symbol);
         }
-    }, [tokenInfo]);
+    }, [tokenInfo, info]);
 
     return (
         <div className="card">
@@ -441,7 +394,6 @@ function TokenAccountCard({ account, info }: { account: Account; info: TokenAcco
                     Refresh
                 </button>
             </div>
-
             <TableCardBody>
                 <tr>
                     <td>Address</td>
@@ -469,7 +421,16 @@ function TokenAccountCard({ account, info }: { account: Account; info: TokenAcco
                 </tr>
                 <tr>
                     <td>Token balance {typeof symbol === 'string' && `(${symbol})`}</td>
-                    <td className="text-lg-end">{balance}</td>
+                    <td className="text-lg-end">
+                        {balance}
+                        <ScaledUiAmountMultiplierTooltip
+                            rawAmount={normalizeTokenAmount(
+                                Number(info.tokenAmount.amount),
+                                info.tokenAmount.decimals || 0
+                            ).toString()}
+                            scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                        />
+                    </td>
                 </tr>
                 <tr>
                     <td>Status</td>
@@ -517,8 +478,8 @@ function TokenAccountCard({ account, info }: { account: Account; info: TokenAcco
                         </tr>
                     </>
                 )}
-                {accountExtensions?.map(extension =>
-                    TokenExtensionRows(extension, epoch, info.tokenAmount.decimals, symbol)
+                {accountExtensions && (
+                    <TokenExtensionsStatusRow address={account.pubkey.toBase58()} extensions={accountExtensions} />
                 )}
             </TableCardBody>
         </div>
@@ -574,7 +535,7 @@ function MultisigAccountCard({ account, info }: { account: Account; info: Multis
 
 function cmpExtension(a: TokenExtension, b: TokenExtension) {
     // be sure that extensions with a header row always come later
-    const sortedExtensionTypes = [
+    const sortedExtensionTypes: TokenExtensionType[] = [
         'transferFeeAmount',
         'mintCloseAuthority',
         'defaultAccountState',
@@ -583,6 +544,7 @@ function cmpExtension(a: TokenExtension, b: TokenExtension) {
         'nonTransferable',
         'nonTransferableAccount',
         'cpiGuard',
+        'pausableAccount',
         'permanentDelegate',
         'transferHook',
         'transferHookAccount',
@@ -595,6 +557,8 @@ function cmpExtension(a: TokenExtension, b: TokenExtension) {
         'confidentialTransferFeeAmount',
         'confidentialTransferMint',
         'interestBearingConfig',
+        'pausableConfig',
+        'scaledUiAmountConfig',
         'transferFeeConfig',
         'tokenGroup',
         'tokenGroupMember',
@@ -605,11 +569,27 @@ function cmpExtension(a: TokenExtension, b: TokenExtension) {
     return sortedExtensionTypes.indexOf(a.extension) - sortedExtensionTypes.indexOf(b.extension);
 }
 
-function TokenExtensionRows(
+function HHeader({ name }: { name: string }) {
+    return (
+        <tr>
+            {/*use important here as there is rule from .table-sm that affects all the underline elements*/}
+            <th colSpan={2} className="e-mb-2 !e-p-4 e-text-[15px] e-font-normal">
+                {name}
+            </th>
+        </tr>
+    );
+}
+
+/* Do not move component to keep commit history.
+    NOTE: Needs to be separated at closest refactoring
+    Also check whether it is needed to keep it as function and not a proper React component
+*/
+export function TokenExtensionRow(
     tokenExtension: TokenExtension,
     maybeEpoch: bigint | undefined,
     decimals: number,
-    symbol: string | undefined
+    symbol: string | undefined,
+    headerStyle: 'header' | 'omit' = 'header'
 ) {
     const epoch = maybeEpoch || 0n; // fallback to 0 if not provided
     switch (tokenExtension.extension) {
@@ -645,9 +625,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, TransferFeeConfig);
             return (
                 <>
-                    <tr>
-                        <h4>Transfer Fee Config</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Transfer Fee Config" /> : null}
                     {extension.transferFeeConfigAuthority && (
                         <tr>
                             <td>Transfer Fee Authority</td>
@@ -723,9 +701,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, ConfidentialTransferMint);
             return (
                 <>
-                    <tr>
-                        <h4>Confidential Transfer</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Confidential Transfer" /> : null}
                     {extension.authority && (
                         <tr>
                             <td>Authority</td>
@@ -751,9 +727,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, ConfidentialTransferFeeConfig);
             return (
                 <>
-                    <tr>
-                        <h4>Confidential Transfer Fee</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Confidential Transfer Fee" /> : null}
                     {extension.authority && (
                         <tr>
                             <td>Authority</td>
@@ -800,9 +774,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, InterestBearingConfig);
             return (
                 <>
-                    <tr>
-                        <h4>Interest-Bearing</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Interest-Bearing" /> : null}
                     {extension.rateAuthority && (
                         <tr>
                             <td>Authority</td>
@@ -827,6 +799,66 @@ function TokenExtensionRows(
                         <td>Initialization Timestamp</td>
                         <td className="text-lg-end">{displayTimestamp(extension.initializationTimestamp * 1000)}</td>
                     </tr>
+                </>
+            );
+        }
+        case 'scaledUiAmountConfig': {
+            const extension = create(tokenExtension.state, ScaledUiAmountConfig);
+            return (
+                <>
+                    {headerStyle === 'header' ? <HHeader name="Scaled UI Amount" /> : null}
+                    {extension.authority && (
+                        <tr>
+                            <td>Authority</td>
+                            <td className="text-lg-end">
+                                <Address pubkey={extension.authority} alignRight link />
+                            </td>
+                        </tr>
+                    )}
+                    <tr>
+                        <td>Multiplier</td>
+                        <td className="text-lg-end">{extension.multiplier}</td>
+                    </tr>
+                    <tr>
+                        <td>New Multiplier</td>
+                        <td className="text-lg-end">{extension.newMultiplier}</td>
+                    </tr>
+                    <tr>
+                        <td>New Multiplier Effective Timestamp</td>
+                        <td className="text-lg-end">
+                            {displayTimestamp(extension.newMultiplierEffectiveTimestamp * 1000)}
+                        </td>
+                    </tr>
+                </>
+            );
+        }
+        case 'pausableAccount': {
+            return (
+                <tr>
+                    <td>Pausable Account</td>
+                    <td className="text-lg-end">enabled</td>
+                </tr>
+            );
+        }
+        case 'pausableConfig': {
+            const extension = create(tokenExtension.state, PausableConfig);
+            return (
+                <>
+                    {headerStyle === 'header' ? <HHeader name="Pausable" /> : null}
+                    <>
+                        {extension.authority && (
+                            <tr>
+                                <td>Authority</td>
+                                <td className="text-lg-end">
+                                    <Address pubkey={extension.authority} alignRight link />
+                                </td>
+                            </tr>
+                        )}
+                        <tr>
+                            <td>Paused</td>
+                            <td className="text-lg-end">{extension.paused ? 'paused' : 'not paused'}</td>
+                        </tr>
+                    </>
                 </>
             );
         }
@@ -941,9 +973,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, TokenMetadata);
             return (
                 <>
-                    <tr>
-                        <h4>Metadata</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Metadata" /> : null}
                     <tr>
                         <td>Mint</td>
                         <td className="text-lg-end">
@@ -969,16 +999,23 @@ function TokenExtensionRows(
                     <tr>
                         <td>URI</td>
                         <td className="text-lg-end">
-                            <a rel="noopener noreferrer" target="_blank" href={extension.uri}>
-                                {extension.uri}
-                                <ExternalLink className="align-text-top ms-2" size={13} />
-                            </a>
+                            {extension.uri.startsWith('http') ? (
+                                <a rel="noopener noreferrer" target="_blank" href={extension.uri}>
+                                    {extension.uri}
+                                    <ExternalLink className="align-text-top ms-2" size={13} />
+                                </a>
+                            ) : (
+                                extension.uri
+                            )}
                         </td>
                     </tr>
                     {extension.additionalMetadata?.length > 0 && (
                         <>
                             <tr>
-                                <h5>Additional Metadata</h5>
+                                {/*use important here as there is rule from .table-sm that affects all the underline elements*/}
+                                <th colSpan={2} className="e-mb-2 e-h-5 !e-pl-6 e-font-normal e-italic">
+                                    Additional Metadata
+                                </th>
                             </tr>
                             {extension.additionalMetadata?.map(keyValuePair => (
                                 <tr key="{keyValuePair[0]}">
@@ -1004,9 +1041,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, ConfidentialTransferAccount);
             return (
                 <>
-                    <tr>
-                        <h4>Confidential Transfer</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Confidential Transfer" /> : null}
                     <tr>
                         <td>Status</td>
                         <td className="text-lg-end">{!extension.approved && 'not '}approved</td>
@@ -1107,9 +1142,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, TokenGroup);
             return (
                 <>
-                    <tr>
-                        <h4>Group</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Group" /> : null}
                     <tr>
                         <td>Mint</td>
                         <td className="text-lg-end">
@@ -1139,9 +1172,7 @@ function TokenExtensionRows(
             const extension = create(tokenExtension.state, TokenGroupMember);
             return (
                 <>
-                    <tr>
-                        <h4>Group Member</h4>
-                    </tr>
+                    {headerStyle === 'header' ? <HHeader name="Group Member" /> : null}
                     <tr>
                         <td>Mint</td>
                         <td className="text-lg-end">

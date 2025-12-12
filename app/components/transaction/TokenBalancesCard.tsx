@@ -1,19 +1,22 @@
 import { Address } from '@components/common/Address';
 import { BalanceDelta } from '@components/common/BalanceDelta';
 import { useTransactionDetails } from '@providers/transactions';
-import { ParsedMessageAccount, PublicKey, TokenAmount, TokenBalance } from '@solana/web3.js';
+import { ParsedMessageAccount, PublicKey, TokenBalance } from '@solana/web3.js';
 import { SignatureProps } from '@utils/index';
 import { BigNumber } from 'bignumber.js';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import useAsyncEffect from 'use-async-effect';
 
+import { useScaledUiAmountForMint } from '@/app/providers/accounts/tokens';
 import { useCluster } from '@/app/providers/cluster';
 import { getTokenInfos } from '@/app/utils/token-info';
+
+import ScaledUiAmountMultiplierTooltip from '../account/token-extensions/ScaledUiAmountMultiplierTooltip';
 
 type TokenBalanceRow = {
     account: PublicKey;
     mint: string;
-    balance: TokenAmount;
+    balance: string;
     delta: BigNumber;
     accountIndex: number;
 };
@@ -49,7 +52,6 @@ export type TokenBalancesCardInnerProps = {
 
 export function TokenBalancesCardInner({ rows }: TokenBalancesCardInnerProps) {
     const { cluster, url } = useCluster();
-    const [tokenInfosLoading, setTokenInfosLoading] = useState(true);
     const [tokenSymbols, setTokenSymbols] = useState<Map<string, string>>(new Map());
 
     useAsyncEffect(async isMounted => {
@@ -57,32 +59,9 @@ export function TokenBalancesCardInner({ rows }: TokenBalancesCardInnerProps) {
         getTokenInfos(mints, cluster, url).then(tokens => {
             if (isMounted()) {
                 setTokenSymbols(new Map(tokens?.map(t => [t.address, t.symbol])));
-                setTokenInfosLoading(false);
             }
         });
     }, []);
-
-    const accountRows = rows.map(({ account, delta, balance, mint }) => {
-        const key = account.toBase58() + mint;
-        const units = tokenInfosLoading ? '' : tokenSymbols.get(mint) || 'tokens';
-
-        return (
-            <tr key={key}>
-                <td>
-                    <Address pubkey={account} link />
-                </td>
-                <td>
-                    <Address pubkey={new PublicKey(mint)} link fetchTokenLabelInfo />
-                </td>
-                <td>
-                    <BalanceDelta delta={delta} />
-                </td>
-                <td>
-                    {balance.uiAmountString} {units}
-                </td>
-            </tr>
-        );
-    });
 
     return (
         <div className="card">
@@ -99,10 +78,56 @@ export function TokenBalancesCardInner({ rows }: TokenBalancesCardInnerProps) {
                             <th className="text-muted">Post Balance</th>
                         </tr>
                     </thead>
-                    <tbody className="list">{accountRows}</tbody>
+                    <tbody className="list">
+                        {rows.map(row => (
+                            <TokenBalanceRow
+                                key={row.account.toBase58() + row.mint}
+                                {...row}
+                                units={tokenSymbols.get(row.mint) || 'tokens'}
+                            />
+                        ))}
+                    </tbody>
                 </table>
             </div>
         </div>
+    );
+}
+
+function TokenBalanceRow({
+    account,
+    delta,
+    balance,
+    mint,
+    units,
+}: {
+    account: PublicKey;
+    delta: BigNumber;
+    balance: string;
+    mint: string;
+    units: string;
+}) {
+    const key = account.toBase58() + mint;
+    const [_, scaledUiAmountMultiplier] = useScaledUiAmountForMint(mint, balance);
+
+    return (
+        <tr key={key}>
+            <td>
+                <Address pubkey={account} link />
+            </td>
+            <td>
+                <Address pubkey={new PublicKey(mint)} link fetchTokenLabelInfo />
+            </td>
+            <td>
+                <BalanceDelta delta={delta.multipliedBy(scaledUiAmountMultiplier)} />
+            </td>
+            <td>
+                {new BigNumber(balance).multipliedBy(scaledUiAmountMultiplier).toString()} {units}
+                <ScaledUiAmountMultiplierTooltip
+                    rawAmount={balance}
+                    scaledUiAmountMultiplier={scaledUiAmountMultiplier}
+                />
+            </td>
+        </tr>
     );
 }
 
@@ -148,9 +173,12 @@ export function generateTokenBalanceRows(
             continue;
         }
 
+        const postBalanceUiAmountString = uiTokenAmount.uiAmountString;
+        const preBalanceUiAmountString = preBalance?.uiTokenAmount.uiAmountString;
+
         // case where mint changes
         if (preBalance && preBalance.mint !== mint) {
-            if (!preBalance.uiTokenAmount.uiAmountString) {
+            if (!preBalanceUiAmountString) {
                 // uiAmount deprecation
                 continue;
             }
@@ -158,20 +186,16 @@ export function generateTokenBalanceRows(
             rows.push({
                 account: accounts[accountIndex].pubkey,
                 accountIndex,
-                balance: {
-                    amount: '0',
-                    decimals: preBalance.uiTokenAmount.decimals,
-                    uiAmount: 0,
-                },
-                delta: new BigNumber(-preBalance.uiTokenAmount.uiAmountString),
+                balance: '0',
+                delta: new BigNumber(-preBalanceUiAmountString),
                 mint: preBalance.mint,
             });
 
             rows.push({
                 account: accounts[accountIndex].pubkey,
                 accountIndex,
-                balance: uiTokenAmount,
-                delta: new BigNumber(uiTokenAmount.uiAmountString),
+                balance: postBalanceUiAmountString,
+                delta: new BigNumber(postBalanceUiAmountString),
                 mint: mint,
             });
             continue;
@@ -180,20 +204,20 @@ export function generateTokenBalanceRows(
         let delta;
 
         if (preBalance) {
-            if (!preBalance.uiTokenAmount.uiAmountString) {
+            if (!preBalanceUiAmountString) {
                 // uiAmount deprecation
                 continue;
             }
 
-            delta = new BigNumber(uiTokenAmount.uiAmountString).minus(preBalance.uiTokenAmount.uiAmountString);
+            delta = new BigNumber(postBalanceUiAmountString).minus(new BigNumber(preBalanceUiAmountString || 0));
         } else {
-            delta = new BigNumber(uiTokenAmount.uiAmountString);
+            delta = new BigNumber(postBalanceUiAmountString);
         }
 
         rows.push({
             account,
             accountIndex,
-            balance: uiTokenAmount,
+            balance: postBalanceUiAmountString,
             delta,
             mint,
         });

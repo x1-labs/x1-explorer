@@ -1,8 +1,6 @@
-/**
- * @jest-environment node
- */
 import _dns from 'dns';
 import fetch, { Headers } from 'node-fetch';
+import { vi } from 'vitest';
 
 import { GET } from '../route';
 
@@ -12,28 +10,31 @@ function setEnvironment(key: string, value: string) {
     Object.assign(process.env, { ...process.env, [key]: value });
 }
 
-jest.mock('node-fetch', () => {
-    const originalFetch = jest.requireActual('node-fetch');
-    const mockFn = jest.fn();
-
-    Object.assign(mockFn, originalFetch);
-
-    return mockFn;
-});
-
-jest.mock('dns', () => {
-    const originalDns = jest.requireActual('dns');
-    const lookupFn = jest.fn();
+vi.mock('node-fetch', async () => {
+    const actual = await vi.importActual('node-fetch');
     return {
-        ...originalDns,
-        promises: {
-            ...originalDns.promises,
-            lookup: lookupFn,
-        }
+        ...actual,
+        default: vi.fn(),
     };
 });
 
-async function mockFileResponseOnce(data: any, headers: Headers){
+vi.mock('dns', async () => {
+    const originalDns = await vi.importActual('dns');
+    const lookupFn = vi.fn();
+    return {
+        ...originalDns,
+        default: {
+            promises: {
+                lookup: lookupFn,
+            },
+        },
+        promises: {
+            lookup: lookupFn,
+        },
+    };
+});
+
+async function mockFileResponseOnce(data: any, headers: Headers) {
     // @ts-expect-error unavailable mock method for fetch
     fetch.mockResolvedValueOnce({ headers, json: async () => data });
 }
@@ -48,12 +49,12 @@ function requestFactory(uri?: string) {
     return { nextParams, request };
 }
 
-describe('metadata/[network] endpoint', () => {
+describe('Metadata Proxy Route', () => {
     const validUrl = encodeURIComponent('http://external.resource/file.json');
     const unsupportedUri = encodeURIComponent('ftp://unsupported.resource/file.json');
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('should return status when disabled', async () => {
@@ -90,16 +91,94 @@ describe('metadata/[network] endpoint', () => {
     });
 
     it('should handle valid response successfully', async () => {
-        await mockFileResponseOnce({ attributes: [], name: "NFT" }, new Headers({
-            'Cache-Control': 'no-cache',
-            'Content-Length': '140',
-            'Content-Type': 'application/json',
-            'Etag': 'random-etag',
-        }));
+        await mockFileResponseOnce(
+            { attributes: [], name: 'NFT' },
+            new Headers({
+                'Cache-Control': 'no-cache',
+                'Content-Length': '140',
+                'Content-Type': 'application/json',
+                Etag: 'random-etag',
+            })
+        );
         // @ts-expect-error lookup does not have mocked fn
         dns.lookup.mockResolvedValueOnce([{ address: '8.8.8.8' }]);
 
         const request = requestFactory(validUrl);
         expect((await GET(request.request, request.nextParams)).status).toBe(200);
     });
+});
+
+describe('Metadata Proxy Route :: resource fetching', () => {
+    const testUri = 'http://google.com/metadata.json';
+    const testData = { description: 'Test Description', name: 'Test NFT' };
+
+    beforeEach(() => {
+        process.env.NEXT_PUBLIC_METADATA_ENABLED = 'true';
+    });
+
+    it('should handle response without Content-Length header', async () => {
+        const sourceHeaders = new Headers({
+            'Cache-Control': 'max-age=3600',
+            'Content-Type': 'application/json',
+            ETag: 'test-etag',
+        });
+
+        // @ts-expect-error lookup does not have mocked fn
+        dns.lookup.mockResolvedValueOnce([{ address: '8.8.8.8' }]);
+
+        // Mock fetch to return a response without Content-Length
+        // @ts-expect-error fetch does not have mocked fn
+        fetch.mockResolvedValueOnce({
+            arrayBuffer: async () => new ArrayBuffer(8),
+            headers: sourceHeaders,
+            json: async () => testData,
+        });
+
+        const request = new Request(`http://localhost:3000/api/metadata/proxy?uri=${encodeURIComponent(testUri)}`);
+        const response = await GET(request, { params: {} });
+
+        // Verify response
+        expect(response.status).toBe(200);
+        expect(response.headers.get('content-type')).toBe('application/json');
+        expect(response.headers.get('cache-control')).toBe('max-age=3600');
+        expect(response.headers.get('etag')).toBe('test-etag');
+
+        // Next.js should calculate and set Content-Length automatically in theory
+        const contentLength = response.headers.get('content-length');
+        expect(contentLength).toBeNull();
+    });
+
+    // Skipped because proxy no longer forwards Content-Length to avoid CORS issues
+    // it('should preserve original Content-Length header when present', async () => {
+    //     const originalContentLength = '89'; // Length of testData JSON, but different from real one
+    //     const sourceHeaders = new Headers({
+    //         'Cache-Control': 'max-age=3600',
+    //         'Content-Length': originalContentLength,
+    //         'Content-Type': 'application/json',
+    //         ETag: 'test-etag',
+    //     });
+
+    //     // @ts-expect-error lookup does not have mocked fn
+    //     dns.lookup.mockResolvedValueOnce([{ address: '8.8.8.8' }]);
+
+    //     // Mock fetch to return a response with Content-Length
+    //     // @ts-expect-error fetch does not have mocked fn
+    //     fetch.mockResolvedValueOnce({
+    //         arrayBuffer: async () => new ArrayBuffer(8),
+    //         headers: sourceHeaders,
+    //         json: async () => testData,
+    //     });
+
+    //     const request = new Request(`http://localhost:3000/api/metadata/proxy?uri=${encodeURIComponent(testUri)}`);
+    //     const response = await GET(request, { params: {} });
+
+    //     // Verify response
+    //     expect(response.status).toBe(200);
+    //     expect(response.headers.get('content-type')).toBe('application/json');
+    //     expect(response.headers.get('cache-control')).toBe('max-age=3600');
+    //     expect(response.headers.get('etag')).toBe('test-etag');
+
+    //     // Content-Length should match original
+    //     expect(response.headers.get('content-length')).toBe(originalContentLength);
+    // });
 });

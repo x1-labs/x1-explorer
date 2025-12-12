@@ -11,17 +11,19 @@ export function UnknownDetailsCard({
     result,
     innerCards,
     childIndex,
+    InstructionCardComponent = InstructionCard,
 }: {
     ix: TransactionInstruction | ParsedInstruction;
     index: number;
     result: SignatureResult;
     innerCards?: JSX.Element[];
     childIndex?: number;
+    InstructionCardComponent?: React.FC<Parameters<typeof InstructionCard>[0]>;
 }) {
     const { cluster } = useCluster();
     const programName = getProgramName(ix.programId.toBase58(), cluster);
     return (
-        <InstructionCard
+        <InstructionCardComponent
             ix={ix}
             index={index}
             result={result}

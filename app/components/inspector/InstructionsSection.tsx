@@ -1,20 +1,64 @@
+import { BaseInstructionCard } from '@components/common/BaseInstructionCard';
+import { useAnchorProgram } from '@entities/idl';
 import { useCluster } from '@providers/cluster';
-import { ComputeBudgetProgram, MessageCompiledInstruction, VersionedMessage } from '@solana/web3.js';
+import { ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+    AddressLookupTableAccount,
+    ComputeBudgetProgram,
+    SystemProgram,
+    TransactionInstruction,
+    TransactionMessage,
+    VersionedMessage,
+} from '@solana/web3.js';
 import { getProgramName } from '@utils/tx';
 import React from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
-import { useAnchorProgram } from '@/app/providers/anchor';
+import { useAddressLookupTables } from '@/app/providers/accounts';
+import { FetchStatus } from '@/app/providers/cache';
 
-import { BaseInstructionCard } from '../common/BaseInstructionCard';
+import { ErrorCard } from '../common/ErrorCard';
+import { LoadingCard } from '../common/LoadingCard';
 import AnchorDetailsCard from '../instruction/AnchorDetailsCard';
 import { ComputeBudgetDetailsCard } from '../instruction/ComputeBudgetDetailsCard';
+import { SystemDetailsCard } from '../instruction/system/SystemDetailsCard';
+import { AssociatedTokenDetailsCard } from './associated-token/AssociatedTokenDetailsCard';
+import { intoParsedInstruction, intoParsedTransaction } from './into-parsed-data';
 import { UnknownDetailsCard } from './UnknownDetailsCard';
-import { intoTransactionInstructionFromVersionedMessage } from './utils';
 
 export function InstructionsSection({ message }: { message: VersionedMessage }) {
+    // Fetch all address lookup tables
+    const hydratedTables = useAddressLookupTables(
+        message.addressTableLookups.map(lookup => lookup.accountKey.toString())
+    );
+    for (let i = 0; i < hydratedTables.length; i++) {
+        const table = hydratedTables[i];
+        if (table && table[1] === FetchStatus.FetchFailed) {
+            return (
+                <ErrorCard
+                    text={`Failed to fetch address lookup table: ${message.addressTableLookups[
+                        i
+                    ].accountKey.toString()}`}
+                />
+            );
+        }
+    }
+
+    const allDefined = hydratedTables.every(
+        table => table !== undefined && table[0] instanceof AddressLookupTableAccount
+    );
+    if (!allDefined) {
+        return <LoadingCard />;
+    }
+
+    const addressLookupTableAccounts = (hydratedTables as any as Array<[AddressLookupTableAccount, FetchStatus]>).map(
+        table => table[0]
+    );
+    const transactionMessage = TransactionMessage.decompile(message, { addressLookupTableAccounts });
+
     return (
         <>
-            {message.compiledInstructions.map((ix, index) => {
+            {transactionMessage.instructions.map((ix, index) => {
                 return <InspectorInstructionCard key={index} {...{ index, ix, message }} />;
             })}
         </>
@@ -27,34 +71,38 @@ function InspectorInstructionCard({
     index,
 }: {
     message: VersionedMessage;
-    ix: MessageCompiledInstruction;
+    ix: TransactionInstruction;
     index: number;
 }) {
     const { cluster, url } = useCluster();
-    const programId = message.staticAccountKeys[ix.programIdIndex];
-    const programName = getProgramName(programId.toBase58(), cluster);
-    const anchorProgram = useAnchorProgram(programId.toString(), url);
 
-    const transactionInstruction = intoTransactionInstructionFromVersionedMessage(ix, message, programId);
+    const programId = ix.programId;
+    const programName = getProgramName(programId.toBase58(), cluster);
+    const anchorProgram = useAnchorProgram(programId.toString(), url, cluster);
 
     if (anchorProgram.program) {
-        return AnchorDetailsCard({
-            anchorProgram: anchorProgram.program,
-            childIndex: undefined,
-            index: index,
-            // Inner cards and child are not used since we do not know what CPIs
-            // will be called until simulation happens, and even then, all we
-            // get is logs, not the TransactionInstructions
-            innerCards: undefined,
-            ix: transactionInstruction,
-            // Always display success since it is too complicated to determine
-            // based on the simulation and pass that result here. Could be added
-            // later if desired, possibly similar to innerCards from parsing tx
-            // sim logs.
-            result: { err: null },
-            // Signature is not needed.
-            signature: '',
-        });
+        return (
+            <ErrorBoundary
+                fallback={<UnknownDetailsCard key={index} index={index} ix={ix} programName="Unknown Program" />}
+            >
+                <AnchorDetailsCard
+                    anchorProgram={anchorProgram.program}
+                    index={index}
+                    // Inner cards and child are not used since we do not know what CPIs
+                    // will be called until simulation happens, and even then, all we
+                    // get is logs, not the TransactionInstructions
+                    innerCards={undefined}
+                    ix={ix}
+                    // Always display success since it is too complicated to determine
+                    // based on the simulation and pass that result here. Could be added
+                    // later if desired, possibly similar to innerCards from parsing tx
+                    // sim logs.
+                    result={{ err: null }}
+                    // Signature is not needed.
+                    signature=""
+                />
+            </ErrorBoundary>
+        );
     }
 
     /// Handle program-specific cards here
@@ -62,16 +110,45 @@ function InspectorInstructionCard({
     //  - result is `err: null` as at this point there should not be errors
     const result = { err: null };
     const signature = '';
-    switch (transactionInstruction?.programId.toString()) {
+
+    switch (ix.programId.toString()) {
+        case ASSOCIATED_TOKEN_PROGRAM_ID.toString(): {
+            // NOTE: current limitation is that innerInstructions won't be present at the AssociatedTokenDetailsCard. For that purpose we might need to simulateTransactions to get them.
+
+            const asParsedInstruction = intoParsedInstruction(ix);
+            return (
+                <AssociatedTokenDetailsCard
+                    key={index}
+                    ix={asParsedInstruction}
+                    raw={ix}
+                    message={message}
+                    index={index}
+                    result={result}
+                />
+            );
+        }
         case ComputeBudgetProgram.programId.toString(): {
             return (
                 <ComputeBudgetDetailsCard
                     key={index}
-                    ix={transactionInstruction}
+                    ix={ix}
                     index={index}
                     result={result}
                     signature={signature}
                     InstructionCardComponent={BaseInstructionCard}
+                />
+            );
+        }
+        case SystemProgram.programId.toString(): {
+            const asParsedInstruction = intoParsedInstruction(ix);
+            const asParsedTransaction = intoParsedTransaction(ix, message);
+            return (
+                <SystemDetailsCard
+                    key={index}
+                    ix={asParsedInstruction}
+                    tx={asParsedTransaction}
+                    index={index}
+                    result={result}
                 />
             );
         }
@@ -80,5 +157,5 @@ function InspectorInstructionCard({
         }
     }
 
-    return <UnknownDetailsCard key={index} index={index} ix={ix} message={message} programName={programName} />;
+    return <UnknownDetailsCard key={index} index={index} ix={ix} programName={programName} />;
 }

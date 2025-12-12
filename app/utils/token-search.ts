@@ -6,7 +6,7 @@
  * So to avoid pulling in extra dependencies we just use the public API directly for search
  */
 
-import { Address } from 'web3js-experimental';
+import { Address } from '@solana/kit';
 
 import { Cluster } from './cluster';
 
@@ -26,7 +26,7 @@ type TokenSearchApiResponse = {
     content: TokenSearchApiResponseToken[];
 };
 
-type SearchElement = {
+export type SearchElement = {
     label: string;
     value: string[];
     pathname: string;

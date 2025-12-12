@@ -1,6 +1,5 @@
 import { ErrorCard } from '@components/common/ErrorCard';
 import { LoadingCard } from '@components/common/LoadingCard';
-import { isAddressLookupTableInstruction } from '@components/instruction/address-lookup-table/types';
 import { AddressLookupTableDetailsCard } from '@components/instruction/AddressLookupTableDetailsCard';
 import { AssociatedTokenDetailsCard } from '@components/instruction/associated-token/AssociatedTokenDetailsCard';
 import { BpfLoaderDetailsCard } from '@components/instruction/bpf-loader/BpfLoaderDetailsCard';
@@ -23,7 +22,7 @@ import { UnknownDetailsCard } from '@components/instruction/UnknownDetailsCard';
 import { VoteDetailsCard } from '@components/instruction/vote/VoteDetailsCard';
 import { isWormholeInstruction } from '@components/instruction/wormhole/types';
 import { WormholeDetailsCard } from '@components/instruction/WormholeDetailsCard';
-import { useAnchorProgram } from '@providers/anchor';
+import { useAnchorProgram } from '@entities/idl';
 import { useCluster } from '@providers/cluster';
 import { useTransactionDetails, useTransactionStatus } from '@providers/transactions';
 import { useFetchTransactionDetails } from '@providers/transactions/parsed';
@@ -42,12 +41,19 @@ import { intoTransactionInstruction } from '@utils/tx';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
+import { useProgramMetadataIdl } from '@/app/entities/program-metadata';
+
 import AnchorDetailsCard from '../instruction/AnchorDetailsCard';
 import { Ed25519DetailsCard } from '../instruction/ed25519/Ed25519DetailsCard';
 import { isEd25519Instruction } from '../instruction/ed25519/types';
 import { LighthouseDetailsCard } from '../instruction/lighthouse/LighthouseDetailsCard';
 import { isLighthouseInstruction } from '../instruction/lighthouse/types';
 import { isMangoInstruction } from '../instruction/mango/types';
+import { ProgramMetadataIdlInstructionDetailsCard } from '../instruction/program-metadata-idl/ProgramMetadataIdlInstructionDetailsCard';
+import {
+    isSolanaAttestationInstruction,
+    SolanaAttestationDetailsCard,
+} from '../instruction/sas/SolanaAttestationDetailsCard';
 
 export type InstructionDetailsProps = {
     tx: ParsedTransaction;
@@ -122,6 +128,7 @@ export function InstructionsSection({ signature }: SignatureProps) {
                                     tx={transaction}
                                     childIndex={childIndex}
                                     url={url}
+                                    cluster={cluster}
                                 />
                             );
                             innerCards.push(res);
@@ -138,6 +145,7 @@ export function InstructionsSection({ signature }: SignatureProps) {
                             tx={transaction}
                             innerCards={innerCards}
                             url={url}
+                            cluster={cluster}
                         />
                     );
                 })}
@@ -155,6 +163,7 @@ function InstructionCard({
     innerCards,
     childIndex,
     url,
+    cluster,
 }: {
     ix: ParsedInstruction | PartiallyDecodedInstruction;
     tx: ParsedTransaction;
@@ -164,9 +173,11 @@ function InstructionCard({
     innerCards?: JSX.Element[];
     childIndex?: number;
     url: string;
+    cluster: Cluster;
 }) {
     const key = `${index}-${childIndex}`;
-    const { program: anchorProgram } = useAnchorProgram(ix.programId.toString(), url);
+    const { program: anchorProgram } = useAnchorProgram(ix.programId.toString(), url, cluster);
+    const { programMetadataIdl } = useProgramMetadataIdl(ix.programId.toString(), url, cluster);
 
     if ('parsed' in ix) {
         const props = {
@@ -199,6 +210,8 @@ function InstructionCard({
                 return <AssociatedTokenDetailsCard {...props} key={key} />;
             case 'vote':
                 return <VoteDetailsCard {...props} key={key} />;
+            case 'address-lookup-table':
+                return <AddressLookupTableDetailsCard {...props} key={key} />;
             default:
                 return <UnknownDetailsCard {...props} key={key} />;
         }
@@ -219,9 +232,7 @@ function InstructionCard({
         signature,
     };
 
-    if (isAddressLookupTableInstruction(transactionIx)) {
-        return <AddressLookupTableDetailsCard key={key} {...props} />;
-    } else if (isEd25519Instruction(transactionIx)) {
+    if (isEd25519Instruction(transactionIx)) {
         return <Ed25519DetailsCard key={key} {...props} tx={tx} />;
     } else if (isMangoInstruction(transactionIx)) {
         return <MangoDetailsCard key={key} {...props} />;
@@ -239,6 +250,14 @@ function InstructionCard({
         return <ComputeBudgetDetailsCard key={key} {...props} />;
     } else if (isLighthouseInstruction(transactionIx)) {
         return <LighthouseDetailsCard key={key} {...props} />;
+    } else if (isSolanaAttestationInstruction(transactionIx)) {
+        return (
+            <ErrorBoundary fallback={<UnknownDetailsCard {...props} />} key={key}>
+                <SolanaAttestationDetailsCard {...props} />
+            </ErrorBoundary>
+        );
+    } else if (programMetadataIdl) {
+        return <ProgramMetadataIdlInstructionDetailsCard key={key} {...props} idl={programMetadataIdl} />;
     } else if (anchorProgram) {
         return (
             <ErrorBoundary fallback={<UnknownDetailsCard {...props} />} key={key}>

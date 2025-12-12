@@ -1,6 +1,7 @@
 import { Address } from '@components/common/Address';
 import { SolBalance } from '@components/common/SolBalance';
 import { useCluster } from '@providers/cluster';
+import { address } from '@solana/kit';
 import { SignatureResult, TransactionInstruction } from '@solana/web3.js';
 import {
     ComputeBudgetInstruction,
@@ -13,7 +14,6 @@ import {
 } from '@solana-program/compute-budget';
 import { microLamportsToLamportsString } from '@utils/index';
 import React from 'react';
-import { address } from 'web3js-experimental';
 
 import { InstructionCard } from './InstructionCard';
 
@@ -40,12 +40,10 @@ export function ComputeBudgetDetailsCard({
         const type = identifyComputeBudgetInstruction(ix);
         switch (type) {
             case ComputeBudgetInstruction.RequestUnits: {
+                const idata = { ...ix, programAddress: address(ix.programId.toBase58()) };
                 const {
                     data: { units, additionalFee },
-                } = parseRequestUnitsInstruction({
-                    ...ix,
-                    programAddress: address(ix.programId.toBase58()),
-                });
+                } = parseRequestUnitsInstruction(idata);
                 return (
                     <InstructionCardComponent
                         ix={ix}

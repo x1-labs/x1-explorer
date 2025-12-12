@@ -1,17 +1,14 @@
-/**
- * @jest-environment node
- */
 import fetch, { Headers } from 'node-fetch';
+import { vi } from 'vitest';
 
 import { fetchResource } from '../feature';
 
-jest.mock('node-fetch', () => {
-    const originalFetch = jest.requireActual('node-fetch');
-    const mockFn = jest.fn();
-
-    Object.assign(mockFn, originalFetch);
-
-    return mockFn;
+vi.mock('node-fetch', async () => {
+    const actual = await vi.importActual('node-fetch');
+    return {
+        ...actual,
+        default: vi.fn(),
+    };
 });
 
 /**
@@ -21,7 +18,7 @@ function mockFetchOnce(data: any = {}, headers: Headers = new Headers()) {
     // @ts-expect-error fetch does not have mocked fn
     fetch.mockResolvedValueOnce({
         headers,
-        json: async () => data
+        json: async () => data,
     });
 }
 
@@ -34,11 +31,11 @@ function mockRejectOnce<T extends Error>(error: T) {
 }
 
 describe('fetchResource', () => {
-    const uri = 'http://hello.world/data.json' ;
+    const uri = 'http://hello.world/data.json';
     const headers = new Headers({ 'Content-Type': 'application/json' });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('should be called with proper arguments', async () => {
@@ -53,7 +50,7 @@ describe('fetchResource', () => {
     it('should throw exception for unsupported media', async () => {
         mockFetchOnce();
 
-        expect(() => {
+        await expect(() => {
             return fetchResource(uri, headers, 100, 100);
         }).rejects.toThrowError('Unsupported Media Type');
     });
@@ -61,7 +58,7 @@ describe('fetchResource', () => {
     it('should throw exception upon exceeded size', async () => {
         mockRejectOnce(new Error('FetchError: content size at https://path/to/resour.ce over limit: 100'));
 
-        expect(() => {
+        await expect(() => {
             return fetchResource(uri, headers, 100, 100);
         }).rejects.toThrowError('Max Content Size Exceeded');
     });
@@ -75,7 +72,7 @@ describe('fetchResource', () => {
         }
         mockRejectOnce(new TimeoutError());
 
-        expect(() => {
+        await expect(() => {
             return fetchResource(uri, headers, 100, 100);
         }).rejects.toThrowError('Gateway Timeout');
     });
@@ -83,14 +80,14 @@ describe('fetchResource', () => {
     it('should handle size overflow', async () => {
         mockRejectOnce(new Error('file is over limit: 100'));
 
-        expect(() => {
+        await expect(() => {
             return fetchResource(uri, headers, 100, 100);
         }).rejects.toThrowError('Max Content Size Exceeded');
     });
 
     it('should handle unexpected result', async () => {
         // @ts-expect-error fetch does not have mocked fn
-        fetch.mockRejectedValueOnce({ data: "unexpected exception" });
+        fetch.mockRejectedValueOnce({ data: 'unexpected exception' });
 
         const fn = () => {
             return fetchResource(uri, headers, 100, 100);
@@ -98,7 +95,7 @@ describe('fetchResource', () => {
 
         try {
             await fn();
-        } catch(e: any) {
+        } catch (e: any) {
             expect(e.message).toEqual('General Error');
             expect(e.status).toEqual(500);
         }
@@ -110,7 +107,9 @@ describe('fetchResource', () => {
         fetch.mockResolvedValueOnce({
             headers: new Headers({ 'Content-Type': 'application/json' }),
             // Simulate malformed JSON by rejecting during json parsing
-            json: async () => { throw new SyntaxError('Unexpected token < in JSON at position 0'); }
+            json: async () => {
+                throw new SyntaxError('Unexpected token < in JSON at position 0');
+            },
         });
 
         await expect(fetchResource(uri, headers, 100, 100)).rejects.toThrowError('Unsupported Media Type');

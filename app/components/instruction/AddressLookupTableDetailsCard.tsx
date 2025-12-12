@@ -1,46 +1,53 @@
 import { useCluster } from '@providers/cluster';
-import { SignatureResult, TransactionInstruction } from '@solana/web3.js';
 import React from 'react';
+import { create } from 'superstruct';
 
-import { parseAddressLookupTableInstructionTitle } from './address-lookup-table/types';
-import { InstructionCard } from './InstructionCard';
+import { CloseLookupTableDetailsCard } from '@/app/components/instruction/address-lookup-table/CloseLookupTableDetails';
+import { CreateLookupTableDetailsCard } from '@/app/components/instruction/address-lookup-table/CreateLookupTableDetails';
+import { DeactivateLookupTableDetailsCard } from '@/app/components/instruction/address-lookup-table/DeactivateLookupTableDetails';
+import { ExtendLookupTableDetailsCard } from '@/app/components/instruction/address-lookup-table/ExtendLookupTableDetails';
+import { FreezeLookupTableDetailsCard } from '@/app/components/instruction/address-lookup-table/FreezeLookupTableDetails';
+import {
+    AddressLookupTableInstructionInfo,
+    CloseLookupTableInfo,
+    CreateLookupTableInfo,
+    DeactivateLookupTableInfo,
+    ExtendLookupTableInfo,
+    FreezeLookupTableInfo,
+} from '@/app/components/instruction/address-lookup-table/types';
+import { UnknownDetailsCard } from '@/app/components/instruction/UnknownDetailsCard';
+import { InstructionDetailsProps } from '@/app/components/transaction/InstructionsSection';
 
-export function AddressLookupTableDetailsCard({
-    ix,
-    index,
-    result,
-    signature,
-    innerCards,
-    childIndex,
-}: {
-    ix: TransactionInstruction;
-    index: number;
-    result: SignatureResult;
-    signature: string;
-    innerCards?: JSX.Element[];
-    childIndex?: number;
-}) {
+export function AddressLookupTableDetailsCard(props: InstructionDetailsProps) {
+    const { ix } = props;
     const { url } = useCluster();
 
-    let title;
     try {
-        title = parseAddressLookupTableInstructionTitle(ix);
+        const parsed = create(ix.parsed, AddressLookupTableInstructionInfo);
+        switch (parsed.type) {
+            case 'createLookupTable': {
+                return <CreateLookupTableDetailsCard {...props} info={parsed.info as CreateLookupTableInfo} />;
+            }
+            case 'extendLookupTable': {
+                return <ExtendLookupTableDetailsCard {...props} info={parsed.info as ExtendLookupTableInfo} />;
+            }
+            case 'freezeLookupTable': {
+                return <FreezeLookupTableDetailsCard {...props} info={parsed.info as FreezeLookupTableInfo} />;
+            }
+            case 'deactivateLookupTable': {
+                return <DeactivateLookupTableDetailsCard {...props} info={parsed.info as DeactivateLookupTableInfo} />;
+            }
+            case 'closeLookupTable': {
+                return <CloseLookupTableDetailsCard {...props} info={parsed.info as CloseLookupTableInfo} />;
+            }
+            default:
+                return <UnknownDetailsCard {...props} />;
+        }
     } catch (error) {
         console.error(error, {
-            signature: signature,
+            signature: props.tx.signatures[0],
             url: url,
         });
+        return <UnknownDetailsCard {...props} />;
     }
-
-    return (
-        <InstructionCard
-            ix={ix}
-            index={index}
-            result={result}
-            title={`Address Lookup Table: ${title || 'Unknown'}`}
-            innerCards={innerCards}
-            childIndex={childIndex}
-            defaultRaw
-        />
-    );
 }

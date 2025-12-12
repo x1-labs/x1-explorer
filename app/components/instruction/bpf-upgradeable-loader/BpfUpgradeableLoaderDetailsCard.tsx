@@ -73,6 +73,8 @@ function renderDetails<T extends object>(props: DetailsProps, parsed: ParsedInfo
             value = <Address pubkey={value} alignRight link />;
         } else if (key === 'bytes') {
             value = <pre className="d-inline-block text-start mb-0 data-wrap">{value}</pre>;
+        } else if (value === null) {
+            value = <span className="text-muted">None</span>;
         }
 
         attributes.push(
