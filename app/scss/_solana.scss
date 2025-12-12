@@ -233,7 +233,7 @@ h4.slot-pill {
         box-sizing: content-box;
         border-radius: 3px;
         border: 1px solid #111312;
-        background: #282d2c;
+        background: #20263f;
         text-align: center;
         align-items: center;
         justify-content: center;
@@ -549,7 +549,7 @@ pre {
 
 .feature-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 0 15px rgba(40, 167, 69, 0.5); // Add green glow using Bootstrap's success color
+    box-shadow: 0 0 15px rgba(40, 61, 167, 0.5); // Add green glow using Bootstrap's success color
 }
 
 .feature-icon {
@@ -589,7 +589,7 @@ pre {
 }
 
 .address-highlight {
-    outline: 1px dashed #33a382;
+    outline: 1px dashed $primary-dark;
     border-radius: 4px;
     box-sizing: border-box;
 }

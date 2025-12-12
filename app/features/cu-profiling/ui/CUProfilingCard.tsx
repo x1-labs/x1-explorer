@@ -74,7 +74,7 @@ const getCUProfileChartOptions = (totalCU: number): ChartOptions<'bar'> => {
                         if (tooltipContent) {
                             tooltipContent.innerHTML = `
                                 <div style="
-                                    background: rgba(30, 30, 30, 0.95);
+                                    background: rgba(1, 28, 89, 0.95);
                                     backdrop-filter: blur(10px);
                                     border-radius: 8px;
                                     padding: 12px 16px;
@@ -170,7 +170,7 @@ const getCUProfileChartOptions = (totalCU: number): ChartOptions<'bar'> => {
 };
 
 function getInstructionColor(index: number): string {
-    const colors = ['#20D79B', '#19A97A', '#137C5A', '#0C503A', '#093A2A'];
+    const colors = ['#0168e5', '#0155c2', '#01429f', '#012f7c', '#011c59'];
 
     // Use % to cycle through colors if there are more instructions than colors
     return colors[index % colors.length];
@@ -241,11 +241,11 @@ export function CUProfilingCard({ instructions, unitsConsumed }: CUProfilingCard
     if (instructions.length === 0) return null;
 
     return (
-        <div className="e-card">
+        <div className="card">
             <div className="card-header">
                 <h3 className="card-header-title">CU profiling</h3>
             </div>
-            <div className="e-card-body">
+            <div className="card-body">
                 {Boolean(unitsConsumed) && <div className="mb-3">Total: {unitsConsumed?.toLocaleString()} CU</div>}
 
                 <div style={{ height: '32px', marginLeft: '-8px' }}>
@@ -253,13 +253,13 @@ export function CUProfilingCard({ instructions, unitsConsumed }: CUProfilingCard
                 </div>
 
                 {/* Legend */}
-                <div className="e-mt-3 e-flex e-flex-wrap e-gap-3 e-text-xs">
+                <div className="mt-3 d-flex flex-wrap gap-3 font-size-sm">
                     {instructions.map((item, i) => {
                         const isReserved = !item.computeUnits && !item.reservedValue && item.displayUnits;
                         const value = item.computeUnits || item.reservedValue || item.displayUnits;
 
                         return (
-                            <div key={i} className="e-align-items-center e-flex">
+                            <div key={i} className="d-flex align-items-center">
                                 <div
                                     style={{
                                         backgroundColor: getInstructionColor(i),

@@ -20,7 +20,6 @@ export function Navbar({ children }: INavbarProps) {
     const featureGatesPath = useClusterPath({ pathname: '/feature-gates' });
     const supplyPath = useClusterPath({ pathname: '/supply' });
     const validatorsPath = useClusterPath({ pathname: '/validators' });
-    const programsPath = useClusterPath({ pathname: '/verified-programs' });
     const inspectorPath = useClusterPath({ pathname: '/tx/inspector' });
     const selectedLayoutSegment = useSelectedLayoutSegment();
     const selectedLayoutSegments = useSelectedLayoutSegments();
@@ -66,14 +65,6 @@ export function Navbar({ children }: INavbarProps) {
                               href={supplyPath}
                             >
                                 Supply
-                            </Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link
-                                className={`nav-link${selectedLayoutSegment === 'programs' ? ' active' : ''}`}
-                                href={programsPath}
-                            >
-                                Programs
                             </Link>
                         </li>
                         <li className="nav-item">
