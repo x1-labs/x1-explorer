@@ -44,8 +44,13 @@ export function IdlRenderer({
     }
 }
 
-function IdlErrorFallback({ message }: { message: string }) {
-    return <center className="pt-5">{message}</center>;
+function IdlErrorFallback({ message, ...props }: { message: string }) {
+    return (
+        <center className="pt-5">
+            {message}
+            {JSON.stringify(props, undefined, 2)}
+        </center>
+    );
 }
 
 const IdlJson = memo(({ idl, collapsed }: { idl: any; collapsed: boolean | number }) => {
