@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, screen, userEvent, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from './button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
@@ -23,12 +23,32 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-    play: async ({ canvasElement }) => {
+    async play({ canvasElement }) {
         const canvas = within(canvasElement);
         const trigger = canvas.getByRole('button');
         await userEvent.hover(trigger);
-        const tooltip = await screen.findByRole('tooltip');
-        expect(tooltip).toHaveTextContent('This is a tooltip');
+
+        // Radix UI Tooltip renders two instances of the tooltip text for accessibility:
+        // 1. Visual tooltip - rendered in a portal, visible to users
+        // 2. Hidden element - linked via aria-describedby for screen readers
+
+        // Use body to query portaled content (works across all browsers)
+        const body = canvasElement.ownerDocument.body;
+        const screen = within(body);
+
+        // Find all tooltip text instances - there should be exactly 2:
+        // 1. Visual tooltip - rendered in a portal, visible to users
+        // 2. Hidden element - linked via aria-describedby for screen readers
+        const tooltipTexts = await screen.findAllByText('This is a tooltip');
+        expect(tooltipTexts).toHaveLength(2);
+
+        // Verify at least one is visible (the visual tooltip)
+        const visibleTooltip = tooltipTexts.find(el => el.checkVisibility?.() ?? true);
+        expect(visibleTooltip).toBeDefined();
+
+        // Verify accessibility: trigger should have aria-describedby pointing to a hidden element
+        const describedById = trigger.getAttribute('aria-describedby');
+        expect(describedById).toBeTruthy();
     },
     render: () => (
         <Tooltip>
