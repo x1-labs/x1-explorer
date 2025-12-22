@@ -7,4 +7,9 @@ import * as projectAnnotations from './preview';
 // More info at: https://storybook.js.org/docs/api/portable-stories/portable-stories-vitest#setprojectannotations
 const project = setProjectAnnotations([a11yAnnotations, projectAnnotations]);
 
-beforeAll(project.beforeAll);
+// Set globalProjectAnnotations for addon-vitest compatibility
+globalThis.globalProjectAnnotations = project;
+
+if (project.beforeAll) {
+    beforeAll(project.beforeAll);
+}
