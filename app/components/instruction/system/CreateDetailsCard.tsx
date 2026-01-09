@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { SolBalance } from '@components/common/SolBalance';
 import { ParsedInstruction, SignatureResult, SystemProgram } from '@solana/web3.js';
 import React from 'react';
@@ -35,7 +36,7 @@ export function CreateDetailsCard(props: {
             <tr>
                 <td>From Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.source} alignRight link />
+                    <AddressWithDomain pubkey={info.source} alignRight link />
                 </td>
             </tr>
 

@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { useFetchAccountInfo, useMintAccountInfo, useTokenAccountInfo } from '@providers/accounts';
 import { ParsedInstruction, ParsedTransaction, PublicKey, SignatureResult } from '@solana/web3.js';
 import { normalizeTokenAmount } from '@utils/index';
@@ -144,7 +145,10 @@ function TokenInstruction(props: InfoProps) {
         let tag;
         let labelSuffix = '';
         if (value instanceof PublicKey) {
-            tag = <Address pubkey={value} alignRight link />;
+            // Show domains for wallet addresses (source, destination, owner, authority)
+            // but keep regular Address for token/mint accounts
+            const showDomain = ['source', 'destination', 'owner', 'authority', 'multisigOwner', 'newAuthority', 'delegate'].includes(key);
+            tag = showDomain ? <AddressWithDomain pubkey={value} alignRight link /> : <Address pubkey={value} alignRight link />;
         } else if (key === 'amount') {
             let amount;
             if (decimals === undefined) {

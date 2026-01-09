@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { SolBalance } from '@components/common/SolBalance';
 import { ParsedInstruction, SignatureResult, SystemProgram } from '@solana/web3.js';
 import React from 'react';
@@ -35,14 +36,14 @@ export function TransferDetailsCard(props: {
             <tr>
                 <td>From Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.source} alignRight link />
+                    <AddressWithDomain pubkey={info.source} alignRight link />
                 </td>
             </tr>
 
             <tr>
                 <td>To Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.destination} alignRight link />
+                    <AddressWithDomain pubkey={info.destination} alignRight link />
                 </td>
             </tr>
 

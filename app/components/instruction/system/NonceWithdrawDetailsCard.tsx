@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { SolBalance } from '@components/common/SolBalance';
 import { ParsedInstruction, SignatureResult, SystemProgram } from '@solana/web3.js';
 import React from 'react';
@@ -42,14 +43,14 @@ export function NonceWithdrawDetailsCard(props: {
             <tr>
                 <td>Authority Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.nonceAuthority} alignRight link />
+                    <AddressWithDomain pubkey={info.nonceAuthority} alignRight link />
                 </td>
             </tr>
 
             <tr>
                 <td>To Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.destination} alignRight link />
+                    <AddressWithDomain pubkey={info.destination} alignRight link />
                 </td>
             </tr>
 

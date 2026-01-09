@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { ParsedInstruction, SignatureResult, StakeProgram } from '@solana/web3.js';
 import React from 'react';
 
@@ -41,14 +42,14 @@ export function AuthorizeDetailsCard(props: {
             <tr>
                 <td>Old Authority Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.authority} alignRight link />
+                    <AddressWithDomain pubkey={info.authority} alignRight link />
                 </td>
             </tr>
 
             <tr>
                 <td>New Authority Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.newAuthority} alignRight link />
+                    <AddressWithDomain pubkey={info.newAuthority} alignRight link />
                 </td>
             </tr>
 
