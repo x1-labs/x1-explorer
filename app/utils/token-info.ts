@@ -3,6 +3,45 @@ import { ChainId, Client, Token, UtlConfig } from '@solflare-wallet/utl-sdk';
 
 import { Cluster } from './cluster';
 
+// Hardcoded token registry for X1 network
+const WRAPPED_NATIVE_MINT = 'So11111111111111111111111111111111111111112';
+
+const HARDCODED_TOKENS: Record<string, { decimals: number; name: string; symbol: string; website?: string }> = {
+    [WRAPPED_NATIVE_MINT]: {
+        decimals: 9,
+        name: 'XNT Wrapper',
+        symbol: 'WXNT',
+        website: 'https://x1.xyz',
+    },
+};
+
+function getHardcodedToken(address: string): Token | undefined {
+    const token = HARDCODED_TOKENS[address];
+    if (!token) return undefined;
+    return {
+        address,
+        decimals: token.decimals,
+        logoURI: null,
+        name: token.name,
+        symbol: token.symbol,
+        verified: true,
+    };
+}
+
+function getHardcodedFullTokenInfo(address: string, chainId: number): FullTokenInfo | undefined {
+    const token = HARDCODED_TOKENS[address];
+    if (!token) return undefined;
+    return {
+        address,
+        chainId,
+        decimals: token.decimals,
+        extensions: token.website ? { website: token.website } : undefined,
+        name: token.name,
+        symbol: token.symbol,
+        verified: true,
+    };
+}
+
 type TokenExtensions = {
     readonly website?: string;
     readonly bridgeContract?: string;
@@ -67,10 +106,12 @@ export async function getTokenInfo(
     cluster: Cluster,
     connectionString: string
 ): Promise<Token | undefined> {
+    const hardcoded = getHardcodedToken(address.toBase58());
+    if (hardcoded) return hardcoded;
+    if (process.env.NEXT_PUBLIC_DISABLE_TOKEN_SEARCH) return undefined;
     const client = makeUtlClient(cluster, connectionString);
     if (!client) return undefined;
-    const token = await client.fetchMint(address);
-    return token;
+    return client.fetchMint(address);
 }
 
 type UtlApiResponse = {
@@ -81,6 +122,9 @@ export async function getTokenInfoWithoutOnChainFallback(
     address: PublicKey,
     cluster: Cluster
 ): Promise<Token | undefined> {
+    const hardcoded = getHardcodedToken(address.toBase58());
+    if (hardcoded) return hardcoded;
+    if (process.env.NEXT_PUBLIC_DISABLE_TOKEN_SEARCH) return undefined;
     const chainId = getChainId(cluster);
     if (!chainId) return undefined;
 
@@ -131,6 +175,9 @@ export async function getFullTokenInfo(
     connectionString: string
 ): Promise<FullTokenInfo | undefined> {
     const chainId = getChainId(cluster);
+    const hardcoded = getHardcodedFullTokenInfo(address.toBase58(), chainId ?? 101);
+    if (hardcoded) return hardcoded;
+    if (process.env.NEXT_PUBLIC_DISABLE_TOKEN_SEARCH) return undefined;
     if (!chainId) return undefined;
 
     const [legacyCdnTokenInfo, sdkTokenInfo] = await Promise.all([
@@ -170,8 +217,22 @@ export async function getTokenInfos(
     cluster: Cluster,
     connectionString: string
 ): Promise<Token[] | undefined> {
+    // Check for hardcoded tokens first
+    const results: Token[] = [];
+    const remaining: PublicKey[] = [];
+    for (const addr of addresses) {
+        const hardcoded = getHardcodedToken(addr.toBase58());
+        if (hardcoded) {
+            results.push(hardcoded);
+        } else {
+            remaining.push(addr);
+        }
+    }
+    if (process.env.NEXT_PUBLIC_DISABLE_TOKEN_SEARCH || remaining.length === 0) {
+        return results.length > 0 ? results : undefined;
+    }
     const client = makeUtlClient(cluster, connectionString);
-    if (!client) return undefined;
-    const tokens = await client.fetchMints(addresses);
-    return tokens;
+    if (!client) return results.length > 0 ? results : undefined;
+    const fetched = await client.fetchMints(remaining);
+    return [...results, ...fetched];
 }
