@@ -30,9 +30,9 @@ export function VerifiedBuildCard({ data, pubkey }: { data: UpgradeableLoaderAcc
         return (
             <div className="card">
                 <div className="card-body text-center">
-                    Verified build information not yet uploaded by program authority. For more information, see the{' '}
-                    <Link href="https://solana.com/developers/guides/advanced/verified-builds" target="_blank">
-                        Verified Build Guide
+                    Verified build information not yet uploaded by program authority. For more information, visit{' '}
+                    <Link href="https://verify.x1ns.xyz" target="_blank">
+                        verify.x1ns.xyz
                     </Link>
                 </div>
             </div>
@@ -45,7 +45,7 @@ export function VerifiedBuildCard({ data, pubkey }: { data: UpgradeableLoaderAcc
         registryInfo.verification_status === VerificationStatus.Verified ||
         registryInfo.verification_status === VerificationStatus.PdaUploaded
     ) {
-        verificationMessage = 'Information provided by osec.io';
+        verificationMessage = 'Information provided by verify.x1ns.xyz';
     } else if (registryInfo.verification_status === VerificationStatus.NotVerified) {
         verificationMessage = 'No verified build found';
     }
@@ -58,13 +58,13 @@ export function VerifiedBuildCard({ data, pubkey }: { data: UpgradeableLoaderAcc
             </div>
             <div className="alert mt-2 mb-2">
                 A verified build badge indicates that this program was built from source code that is publicly
-                available, but does not imply that this program has been audited. For more details, refer to the{' '}
+                available, but does not imply that this program has been audited. For more details, visit{' '}
                 <a
-                    href="https://solana.com/developers/guides/advanced/verified-builds"
+                    href="https://verify.x1ns.xyz"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    Verified Builds Guide <ExternalLink className="align-text-top ms-1" size={13} />
+                    verify.x1ns.xyz <ExternalLink className="align-text-top ms-1" size={13} />
                 </a>
                 .
             </div>
