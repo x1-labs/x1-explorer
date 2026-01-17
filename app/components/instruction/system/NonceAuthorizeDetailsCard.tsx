@@ -1,4 +1,5 @@
 import { Address } from '@components/common/Address';
+import { AddressWithDomain } from '@components/common/AddressWithDomain';
 import { ParsedInstruction, SignatureResult, SystemProgram } from '@solana/web3.js';
 import React from 'react';
 
@@ -41,14 +42,14 @@ export function NonceAuthorizeDetailsCard(props: {
             <tr>
                 <td>Old Authority Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.nonceAuthority} alignRight link />
+                    <AddressWithDomain pubkey={info.nonceAuthority} alignRight link />
                 </td>
             </tr>
 
             <tr>
                 <td>New Authority Address</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.newAuthorized} alignRight link />
+                    <AddressWithDomain pubkey={info.newAuthorized} alignRight link />
                 </td>
             </tr>
         </InstructionCard>
