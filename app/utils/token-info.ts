@@ -14,8 +14,8 @@ const HARDCODED_TOKENS: Record<
     [USDC_MINT]: {
         decimals: 6,
         logoURI: 'https://raw.githubusercontent.com/x1-labs/assets/main/tokens/usdc-x/logo.png',
-        name: 'USDC',
-        symbol: 'USDC',
+        name: 'USDC.X',
+        symbol: 'USDC.X',
         website: 'https://x1.xyz',
     },
     [WRAPPED_NATIVE_MINT]: {
