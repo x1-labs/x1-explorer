@@ -48,7 +48,7 @@ export function CreateIdempotentDetailsCard(props: {
             <tr>
                 <td>Mint</td>
                 <td className="text-lg-end">
-                    <Address pubkey={info.mint} alignRight link />
+                    <Address pubkey={info.mint} alignRight link fetchTokenLabelInfo />
                 </td>
             </tr>
 

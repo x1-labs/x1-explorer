@@ -5,8 +5,19 @@ import { Cluster } from './cluster';
 
 // Hardcoded token registry for X1 network
 const WRAPPED_NATIVE_MINT = 'So11111111111111111111111111111111111111112';
+const USDC_MINT = 'B69chRzqzDCmdB5WYB8NRu5Yv5ZA95ABiZcdzCgGm9Tq';
 
-const HARDCODED_TOKENS: Record<string, { decimals: number; name: string; symbol: string; website?: string }> = {
+const HARDCODED_TOKENS: Record<
+    string,
+    { decimals: number; name: string; symbol: string; logoURI?: string; website?: string }
+> = {
+    [USDC_MINT]: {
+        decimals: 6,
+        logoURI: 'https://raw.githubusercontent.com/x1-labs/assets/main/tokens/usdc-x/logo.png',
+        name: 'USDC.X',
+        symbol: 'USDC.X',
+        website: 'https://x1.xyz',
+    },
     [WRAPPED_NATIVE_MINT]: {
         decimals: 9,
         name: 'XNT Wrapper',
@@ -21,7 +32,7 @@ function getHardcodedToken(address: string): Token | undefined {
     return {
         address,
         decimals: token.decimals,
-        logoURI: null,
+        logoURI: token.logoURI ?? null,
         name: token.name,
         symbol: token.symbol,
         verified: true,
@@ -36,6 +47,7 @@ function getHardcodedFullTokenInfo(address: string, chainId: number): FullTokenI
         chainId,
         decimals: token.decimals,
         extensions: token.website ? { website: token.website } : undefined,
+        logoURI: token.logoURI,
         name: token.name,
         symbol: token.symbol,
         verified: true,
