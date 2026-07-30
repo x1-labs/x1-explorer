@@ -52,8 +52,9 @@ function TokenInstruction(props: InfoProps) {
         let mintAddress: string | undefined;
         let tokenAddress: string | undefined;
 
-        // No sense fetching accounts if we don't need to convert an amount
-        if (!('amount' in props.info)) return {};
+        // No sense fetching accounts if we don't need to convert an amount.
+        // Checked instructions carry `tokenAmount` instead of a raw `amount`.
+        if (!('amount' in props.info) && !('tokenAmount' in props.info)) return {};
 
         if ('mint' in props.info && props.info.mint instanceof PublicKey) {
             mintAddress = props.info.mint.toBase58();
@@ -104,14 +105,17 @@ function TokenInstruction(props: InfoProps) {
             tokenSymbol = tokenDetails.symbol;
         }
 
-        attributes.push(
-            <tr key={mintAddress}>
-                <td>Token</td>
-                <td className="text-lg-end">
-                    <Address pubkey={new PublicKey(mintAddress)} alignRight link fetchTokenLabelInfo />
-                </td>
-            </tr>
-        );
+        // When the instruction itself carries the mint, it already gets its own labeled row below
+        if (!('mint' in props.info)) {
+            attributes.push(
+                <tr key={mintAddress}>
+                    <td>Token</td>
+                    <td className="text-lg-end">
+                        <Address pubkey={new PublicKey(mintAddress)} alignRight link fetchTokenLabelInfo />
+                    </td>
+                </tr>
+            );
+        }
     }
 
     for (let key in props.info) {
@@ -144,7 +148,7 @@ function TokenInstruction(props: InfoProps) {
         let tag;
         let labelSuffix = '';
         if (value instanceof PublicKey) {
-            tag = <Address pubkey={value} alignRight link />;
+            tag = <Address pubkey={value} alignRight link fetchTokenLabelInfo={key === 'mint'} />;
         } else if (key === 'amount') {
             let amount;
             if (decimals === undefined) {

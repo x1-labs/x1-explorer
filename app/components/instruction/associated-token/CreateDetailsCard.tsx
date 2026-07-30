@@ -44,7 +44,7 @@ export function CreateDetailsCard({
             <tr>
                 <td>Mint</td>
                 <td className="text-lg-end">
-                    <Address pubkey={new PublicKey(info.mint)} alignRight link />
+                    <Address pubkey={new PublicKey(info.mint)} alignRight link fetchTokenLabelInfo />
                 </td>
             </tr>
 
