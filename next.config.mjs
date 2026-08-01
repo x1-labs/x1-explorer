@@ -4,6 +4,10 @@ const SUPPLY_ALIASES = ['accounts', 'accounts/top'];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  generateBuildId: async () => {
+    // Force cache bust with timestamp
+    return `build-${Date.now()}`;
+  },
   experimental: {
     // FIXME: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
     missingSuspenseWithCSRBailout: false,
