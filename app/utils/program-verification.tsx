@@ -73,25 +73,27 @@ export interface AnchorBuild {
  */
 export async function getAnchorVerifiableBuild(programId: PublicKey): Promise<VerifiableBuild> {
     const programIdBase58 = programId.toBase58();
-    const url = `https://api.apr.dev/api/v0/program/${programIdBase58}/latest?limit=5`;
+    const url = `${process.env.NEXT_PUBLIC_X1_VERIFY_API_URL || 'https://verify.x1ns.xyz'}/api/program/${programIdBase58}/latest?limit=5`;
     const latestBuildsResp = await fetch(url);
 
-    // Filter out all non successful builds.
-    const latestBuilds = (await latestBuildsResp.json()).filter(
-        (b: AnchorBuild) => !b.aborted && b.state === 'Built' && b.verified === 'Verified'
-    ) as AnchorBuild[];
-
-    if (latestBuilds.length === 0) {
+    // Check if the response is ok and has data
+    if (!latestBuildsResp.ok) {
         return defaultAnchorBuild;
     }
 
-    // Get the latest build.
-    const { verified_slot, id } = latestBuilds[0];
+    const latestBuilds = await latestBuildsResp.json();
+
+    if (!Array.isArray(latestBuilds) || latestBuilds.length === 0) {
+        return defaultAnchorBuild;
+    }
+
+    // Get the latest build
+    const latestBuild = latestBuilds[0];
     return {
         ...defaultAnchorBuild,
-        id,
-        url: `https://apr.dev/program/${programIdBase58}/build/${id}`,
-        verified_slot,
+        id: latestBuild.pda,
+        url: `${process.env.NEXT_PUBLIC_X1_VERIFY_API_URL || 'https://verify.x1ns.xyz'}/api/program/${programIdBase58}`,
+        verified_slot: 0, // X1 verification doesn't use slots
     };
 }
 
