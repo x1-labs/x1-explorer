@@ -48,6 +48,8 @@ import { isEd25519Instruction } from '../instruction/ed25519/types';
 import { LighthouseDetailsCard } from '../instruction/lighthouse/LighthouseDetailsCard';
 import { isLighthouseInstruction } from '../instruction/lighthouse/types';
 import { isMangoInstruction } from '../instruction/mango/types';
+import { isX1NSInstruction } from '../instruction/x1ns/types';
+import { X1NSDetailsCard } from '../instruction/x1ns/X1NSDetailsCard';
 
 export type InstructionDetailsProps = {
     tx: ParsedTransaction;
@@ -223,6 +225,8 @@ function InstructionCard({
         return <AddressLookupTableDetailsCard key={key} {...props} />;
     } else if (isEd25519Instruction(transactionIx)) {
         return <Ed25519DetailsCard key={key} {...props} tx={tx} />;
+    } else if (isX1NSInstruction(transactionIx)) {
+        return <X1NSDetailsCard key={key} {...props} />;
     } else if (isMangoInstruction(transactionIx)) {
         return <MangoDetailsCard key={key} {...props} />;
     } else if (isSerumInstruction(transactionIx)) {
