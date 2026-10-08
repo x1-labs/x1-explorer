@@ -8,11 +8,13 @@ on:
 
 jobs:
   Build-And-Test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: [18.x]
+        os: [ubuntu-24.04, ubuntu-26.04]
 
     steps:
       - name: Checkout
